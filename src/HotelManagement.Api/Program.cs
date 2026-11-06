@@ -1,7 +1,15 @@
 using HotelManagement.Api.Configuration;
 using HotelManagement.Application.Configuration;
+using HotelManagement.Infrastructure.Configuration;
 
 var builder = WebApplication.CreateBuilder(args);
+
+var connectionString =
+    builder.Configuration.GetConnectionString("DefaultConnection")
+    ?? throw new InvalidOperationException(
+        "Falta configurar ConnectionStrings:DefaultConnection.");
+
+builder.Services.AddInfrastructure(connectionString);
 
 builder.Services.AddApplication();
 builder.Services.AddApiErrorHandling();
