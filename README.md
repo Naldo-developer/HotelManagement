@@ -30,5 +30,11 @@ Para HTTPS necesitas un certificado de desarrollo de confianza (`dotnet dev-cert
 ```
 
 Este endpoint solo comprueba que la API responde; no verifica PostgreSQL.
-La base `hotel_management` ya existe. El script y el scaffolding están pendientes
-de otro integrante; este avance no agrega tablas, entidades, DbContext ni migraciones.
+El SQL inicial y el modelo generado ya están integrados: el script define 16 tablas
+y el scaffolding aporta las entidades de Domain y el DbContext de Infrastructure.
+Esto no implica que la API esté conectada a PostgreSQL; su configuración de conexión
+e inyección del contexto está pendiente.
+
+Application registra MediatR mediante `AddApplication`. Todavía no hay casos de uso
+CQRS ni endpoints de negocio implementados. Las convenciones y la versión elegida
+se documentan en [docs/arquitectura.md](docs/arquitectura.md).

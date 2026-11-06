@@ -13,6 +13,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HotelManagement.Application
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HotelManagement.Infrastructure", "src\HotelManagement.Infrastructure\HotelManagement.Infrastructure.csproj", "{E26DF4BD-329A-4CC5-A2E7-10B98C86B715}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{0AB3BF05-4346-4AA6-1389-037BE0695223}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HotelManagement.Api.Tests", "tests\HotelManagement.Api.Tests\HotelManagement.Api.Tests.csproj", "{93725B8A-0334-4BA2-898E-EDDE7C9FA99B}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -71,6 +75,18 @@ Global
 		{E26DF4BD-329A-4CC5-A2E7-10B98C86B715}.Release|x64.Build.0 = Release|Any CPU
 		{E26DF4BD-329A-4CC5-A2E7-10B98C86B715}.Release|x86.ActiveCfg = Release|Any CPU
 		{E26DF4BD-329A-4CC5-A2E7-10B98C86B715}.Release|x86.Build.0 = Release|Any CPU
+		{93725B8A-0334-4BA2-898E-EDDE7C9FA99B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{93725B8A-0334-4BA2-898E-EDDE7C9FA99B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{93725B8A-0334-4BA2-898E-EDDE7C9FA99B}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{93725B8A-0334-4BA2-898E-EDDE7C9FA99B}.Debug|x64.Build.0 = Debug|Any CPU
+		{93725B8A-0334-4BA2-898E-EDDE7C9FA99B}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{93725B8A-0334-4BA2-898E-EDDE7C9FA99B}.Debug|x86.Build.0 = Debug|Any CPU
+		{93725B8A-0334-4BA2-898E-EDDE7C9FA99B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{93725B8A-0334-4BA2-898E-EDDE7C9FA99B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{93725B8A-0334-4BA2-898E-EDDE7C9FA99B}.Release|x64.ActiveCfg = Release|Any CPU
+		{93725B8A-0334-4BA2-898E-EDDE7C9FA99B}.Release|x64.Build.0 = Release|Any CPU
+		{93725B8A-0334-4BA2-898E-EDDE7C9FA99B}.Release|x86.ActiveCfg = Release|Any CPU
+		{93725B8A-0334-4BA2-898E-EDDE7C9FA99B}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -80,5 +96,6 @@ Global
 		{AD56753A-7E12-41C3-AAC0-80B5B2A712F6} = {827E0CD3-B72D-47B6-A68D-7590B98EB39B}
 		{9273B7C6-F63F-4B45-9244-D37C17A8AA9C} = {827E0CD3-B72D-47B6-A68D-7590B98EB39B}
 		{E26DF4BD-329A-4CC5-A2E7-10B98C86B715} = {827E0CD3-B72D-47B6-A68D-7590B98EB39B}
+		{93725B8A-0334-4BA2-898E-EDDE7C9FA99B} = {0AB3BF05-4346-4AA6-1389-037BE0695223}
 	EndGlobalSection
 EndGlobal
