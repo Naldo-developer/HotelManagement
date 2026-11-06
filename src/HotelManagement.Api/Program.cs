@@ -1,5 +1,8 @@
+using HotelManagement.Application.Configuration;
+
 var builder = WebApplication.CreateBuilder(args);
 
+builder.Services.AddApplication();
 builder.Services.AddControllers();
 
 if (builder.Environment.IsDevelopment())
