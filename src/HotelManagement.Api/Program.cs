@@ -1,8 +1,10 @@
+using HotelManagement.Api.Configuration;
 using HotelManagement.Application.Configuration;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddApplication();
+builder.Services.AddApiErrorHandling();
 builder.Services.AddControllers();
 
 if (builder.Environment.IsDevelopment())
@@ -12,6 +14,12 @@ if (builder.Environment.IsDevelopment())
 }
 
 var app = builder.Build();
+
+app.UseExceptionHandler(new ExceptionHandlerOptions
+{
+    // El handler registra solo metadatos seguros; evitar diagnósticos con mensajes sensibles.
+    SuppressDiagnosticsCallback = _ => true
+});
 
 if (app.Environment.IsDevelopment())
 {
