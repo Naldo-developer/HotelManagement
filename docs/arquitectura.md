@@ -51,7 +51,8 @@ registra MediatR y busca handlers en el ensamblado que contiene esa extensión:
 
 Esta configuración no agrega solicitudes, handlers ficticios ni endpoints de
 negocio. El SQL y el modelo generado están integrados, pero la conexión PostgreSQL,
-el registro del DbContext y el manejo común de errores serán tareas posteriores.
+el registro del DbContext serán tareas posteriores. La API cuenta con
+[manejo centralizado de errores](manejo-errores.md) mediante ProblemDetails.
 
 Comprobar el arranque, `/api/health` y Swagger valida la infraestructura HTTP.
 Estas comprobaciones no verifican una operación CQRS real ni acceso a PostgreSQL:
