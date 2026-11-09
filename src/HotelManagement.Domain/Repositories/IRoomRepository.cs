@@ -15,4 +15,13 @@ public interface IRoomRepository
         int page,
         int pageSize,
         CancellationToken cancellationToken);
+    Task<bool> HotelExistsAsync(long hotelId, CancellationToken cancellationToken);
+
+    Task<bool> RoomTypeBelongsToHotelAsync(
+        long roomTypeId, long hotelId, CancellationToken cancellationToken);
+
+    Task<bool> RoomNumberExistsAsync(
+        long hotelId, string roomNumber, CancellationToken cancellationToken);
+
+    Task<Room> CreateAsync(Room room, CancellationToken cancellationToken);
 }
