@@ -20,6 +20,7 @@ public class ErrorHandlingTests
     [InlineData("missing", 404, "El recurso solicitado no existe.")]
     [InlineData("conflict", 409, "El recurso ya existe.")]
     [InlineData("unexpected", 500, "Ocurrió un error inesperado. Inténtalo nuevamente.")]
+    [InlineData("business-validation", 400, "La página debe ser mayor o igual a 1.")]
     public async Task Exceptions_return_problem_details(string error, int status, string detail)
     {
         await using var app = await StartApp();
@@ -131,6 +132,7 @@ public sealed class ErrorProbeController : ControllerBase
         {
             "missing" => new ResourceNotFoundException("El recurso solicitado no existe."),
             "conflict" => new BusinessConflictException("El recurso ya existe."),
+            "business-validation" => new BusinessValidationException("La página debe ser mayor o igual a 1."),
             _ => new InvalidOperationException("sensitive-internal-message;Password=test-secret")
         };
     }
