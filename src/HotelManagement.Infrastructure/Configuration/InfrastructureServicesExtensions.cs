@@ -1,4 +1,6 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using HotelManagement.Domain.Repositories;
+using HotelManagement.Infrastructure.Repositories;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace HotelManagement.Infrastructure.Configuration;
@@ -13,6 +15,8 @@ public static class InfrastructureServicesExtensions
         {
             options.UseNpgsql(connectionString);
         });
+        
+        services.AddScoped<IGuestRepository, GuestRepository>();
 
         return services;
     }
