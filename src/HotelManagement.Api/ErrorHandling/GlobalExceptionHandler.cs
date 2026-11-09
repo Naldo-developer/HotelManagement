@@ -16,6 +16,10 @@ public sealed class GlobalExceptionHandler(
         {
             ResourceNotFoundException => (StatusCodes.Status404NotFound,
                 "Recurso no encontrado", exception.Message),
+            BusinessValidationException => (
+                StatusCodes.Status400BadRequest,
+                "Datos inválidos",
+                exception.Message),
             BusinessConflictException => (StatusCodes.Status409Conflict,
                 "Conflicto de negocio", exception.Message),
             _ => (StatusCodes.Status500InternalServerError,
