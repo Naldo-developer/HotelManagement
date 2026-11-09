@@ -20,4 +20,9 @@ public class CreateRoomDto
     [StringLength(20,
         ErrorMessage = "El piso admite hasta 20 caracteres.")]
     public string? Floor { get; set; }
+    
+    [Required(ErrorMessage = "El estado operativo es obligatorio.")]
+    [RegularExpression("^(ACTIVE|OUT_OF_SERVICE|INACTIVE)$",
+        ErrorMessage = "El estado debe ser ACTIVE, OUT_OF_SERVICE o INACTIVE.")]
+    public string OperationalStatus { get; set; } = "ACTIVE";
 }
