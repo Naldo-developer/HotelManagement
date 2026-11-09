@@ -3,7 +3,7 @@ namespace HotelManagement.Application.DTOs.Guests;
 //Respuesta con los datos de un huésped.
 public class GuestDto
 {
-    public int Id { get; set; }
+    public long Id { get; set; }
     public string FirstName { get; set; } = string.Empty;
     public string LastName { get; set; } = string.Empty;
     public string? DocumentType { get; set; }
