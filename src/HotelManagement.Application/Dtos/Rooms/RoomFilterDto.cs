@@ -7,6 +7,9 @@ public class RoomFilterDto
     [Range(typeof(long), "1", "9223372036854775807",
         ErrorMessage = "El hotel debe tener un identificador positivo.")]
     public long? HotelId { get; set; }
+    [Range(typeof(long), "1", "9223372036854775807",
+        ErrorMessage = "El tipo de habitación debe tener un identificador positivo.")]
+    public long? RoomTypeId { get; set; }
 
     [RegularExpression("^(ACTIVE|OUT_OF_SERVICE|INACTIVE)$",
         ErrorMessage = "El estado debe ser ACTIVE, OUT_OF_SERVICE o INACTIVE.")]
