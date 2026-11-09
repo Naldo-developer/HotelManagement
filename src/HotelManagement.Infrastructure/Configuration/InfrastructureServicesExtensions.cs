@@ -17,6 +17,7 @@ public static class InfrastructureServicesExtensions
         });
         
         services.AddScoped<IGuestRepository, GuestRepository>();
+        services.AddScoped<IRoomRepository, RoomRepository>();
 
         return services;
     }
