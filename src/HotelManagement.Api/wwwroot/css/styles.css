@@ -1,0 +1,191 @@
+:root {
+    --bg: #f6f7f9;
+    --surface: #ffffff;
+    --text: #1c2430;
+    --muted: #5d6b7c;
+    --border: #d9dfe7;
+    --primary: #1f5fbf;
+    --primary-text: #ffffff;
+    --error-bg: #fdecec;
+    --error-text: #8a1f1f;
+    --success-bg: #e8f6ec;
+    --success-text: #1e6a36;
+    --info-bg: #e9f0fb;
+    --info-text: #1b4a8f;
+}
+
+:root:not([data-theme="light"]) {
+    color-scheme: light dark;
+}
+
+@media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+        --bg: #12161c;
+        --surface: #1b212a;
+        --text: #e6eaf0;
+        --muted: #9aa7b8;
+        --border: #2c3542;
+        --primary: #5b9bff;
+        --primary-text: #0c1017;
+        --error-bg: #3a1c1c;
+        --error-text: #ffb4b4;
+        --success-bg: #17301f;
+        --success-text: #9be0b0;
+        --info-bg: #17263d;
+        --info-text: #a9c8ff;
+    }
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+
+html { height: 100%; }
+
+body {
+    margin: 0;
+    min-height: 100%;
+    display: flex;
+    flex-direction: column;
+    background: var(--bg);
+    color: var(--text);
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+    line-height: 1.5;
+}
+
+.topbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.75rem 1.5rem;
+    padding: 0.75rem 1.25rem;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+}
+
+.brand {
+    font-weight: 700;
+    font-size: 1.1rem;
+    color: var(--text);
+    text-decoration: none;
+}
+
+.nav { display: flex; flex-wrap: wrap; gap: 0.25rem; }
+
+.nav a {
+    padding: 0.4rem 0.8rem;
+    border-radius: 6px;
+    color: var(--muted);
+    text-decoration: none;
+}
+
+.nav a:hover { background: var(--bg); color: var(--text); }
+.nav a[aria-current="page"] { background: var(--primary); color: var(--primary-text); }
+
+.messages {
+    width: 100%;
+    max-width: 900px;
+    margin: 1rem auto 0;
+    padding: 0 1.25rem;
+}
+
+.message {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 1rem;
+    margin-bottom: 0.5rem;
+    padding: 0.7rem 0.9rem;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+}
+
+.message.error { background: var(--error-bg); color: var(--error-text); }
+.message.success { background: var(--success-bg); color: var(--success-text); }
+.message.info { background: var(--info-bg); color: var(--info-text); }
+
+.message button {
+    background: none;
+    border: 0;
+    color: inherit;
+    font-size: 1.2rem;
+    line-height: 1;
+    cursor: pointer;
+}
+
+.view {
+    flex: 1;
+    width: 100%;
+    max-width: 900px;
+    margin: 1rem auto;
+    padding: 0 1.25rem;
+}
+
+.card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 1.25rem;
+    margin-bottom: 1rem;
+}
+
+.card h1, .card h2 { margin-top: 0; }
+
+.actions { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.75rem; }
+
+.btn {
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    border: 1px solid var(--primary);
+    background: var(--primary);
+    color: var(--primary-text);
+    font: inherit;
+    cursor: pointer;
+}
+
+.btn.secondary { background: transparent; color: var(--primary); }
+.btn:disabled { opacity: 0.6; cursor: not-allowed; }
+
+.output {
+    margin-top: 0.75rem;
+    padding: 0.75rem;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    overflow-x: auto;
+    white-space: pre-wrap;
+    word-break: break-word;
+    font-family: ui-monospace, Consolas, monospace;
+    font-size: 0.9rem;
+}
+
+.muted { color: var(--muted); }
+
+.footer {
+    padding: 1rem;
+    text-align: center;
+    color: var(--muted);
+    font-size: 0.85rem;
+}
+
+.loading {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    z-index: 100;
+    background: linear-gradient(90deg, transparent, var(--primary), transparent);
+    background-size: 50% 100%;
+    background-repeat: no-repeat;
+    animation: loading-slide 1s linear infinite;
+}
+
+.loading[hidden] { display: none; }
+
+@keyframes loading-slide {
+    from { background-position: -50% 0; }
+    to { background-position: 150% 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .loading { animation: none; background-size: 100% 100%; }
+}
