@@ -18,4 +18,11 @@ public interface IGuestRepository
         string documentType, string documentNumber, CancellationToken cancellationToken);
 
     Task<Guest> CreateAsync(Guest guest, CancellationToken cancellationToken);
+    Task<bool> DocumentExistsForOtherGuestAsync(
+        string documentType,
+        string documentNumber,
+        long excludedGuestId,
+        CancellationToken cancellationToken);
+
+    Task<Guest> UpdateAsync(Guest guest, CancellationToken cancellationToken);
 }
