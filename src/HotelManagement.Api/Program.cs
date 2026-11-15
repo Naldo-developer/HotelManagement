@@ -1,6 +1,7 @@
 using HotelManagement.Api.Configuration;
 using HotelManagement.Application.Configuration;
 using HotelManagement.Infrastructure.Configuration;
+using HotelManagement.Infrastructure.Security;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -13,6 +14,7 @@ builder.Services.AddInfrastructure(connectionString);
 
 builder.Services.AddApplication();
 builder.Services.AddApiErrorHandling();
+builder.Services.AddApiAuthentication();
 builder.Services.AddControllers();
 
 if (builder.Environment.IsDevelopment())
@@ -22,6 +24,11 @@ if (builder.Environment.IsDevelopment())
 }
 
 var app = builder.Build();
+if (app.Environment.IsDevelopment())
+{
+    await app.Services.SeedDemoAccountsAsync(
+        builder.Configuration["DemoAccounts:Password"]);
+}
 
 app.UseExceptionHandler(new ExceptionHandlerOptions
 {
@@ -40,7 +47,8 @@ app.UseHttpsRedirection();
 
 app.UseDefaultFiles();
 app.UseStaticFiles();
-
+app.UseAuthentication();
+app.UseAuthorization();
 app.MapControllers();
 
 app.Run();
