@@ -2,6 +2,8 @@ using HotelManagement.Domain.Entities;
 using HotelManagement.Domain.Repositories;
 using HotelManagement.Infrastructure.Configuration; 
 using Microsoft.EntityFrameworkCore;
+using HotelManagement.Application.Exceptions;
+using Npgsql;
 
 namespace HotelManagement.Infrastructure.Repositories;
 
@@ -59,5 +61,31 @@ public class GuestRepository : IGuestRepository
             .Skip((page - 1) * pageSize)
             .Take(pageSize)
             .ToListAsync(cancellationToken);
+    }
+    public Task<bool> DocumentExistsAsync(
+        string documentType, string documentNumber, CancellationToken cancellationToken)
+    {
+        return _context.Guests.AnyAsync(
+            g => g.DocumentType == documentType && g.DocumentNumber == documentNumber,
+            cancellationToken);
+    }
+
+    public async Task<Guest> CreateAsync(Guest guest, CancellationToken cancellationToken)
+    {
+        _context.Guests.Add(guest);
+
+        try
+        {
+            await _context.SaveChangesAsync(cancellationToken);
+        }
+        catch (DbUpdateException ex) when (ex.InnerException is PostgresException
+                                           { SqlState: PostgresErrorCodes.UniqueViolation,
+                                               ConstraintName: "uq_guests_document" })
+        {
+            throw new BusinessConflictException(
+                "Ya existe un huésped con ese documento.");
+        }
+
+        return guest;
     }
 }

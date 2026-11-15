@@ -1,4 +1,4 @@
-using HotelManagement.Domain.Entities; 
+using HotelManagement.Domain.Entities;
 
 namespace HotelManagement.Domain.Repositories;
 
@@ -13,4 +13,9 @@ public interface IGuestRepository
         int page,
         int pageSize,
         CancellationToken cancellationToken);
+
+    Task<bool> DocumentExistsAsync(
+        string documentType, string documentNumber, CancellationToken cancellationToken);
+
+    Task<Guest> CreateAsync(Guest guest, CancellationToken cancellationToken);
 }
