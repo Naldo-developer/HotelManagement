@@ -1,6 +1,6 @@
 # Base de datos – Sistema de gestión hotelera
 
-Esta carpeta contiene el esquema inicial de PostgreSQL del proyecto.
+Esta carpeta contiene el esquema inicial de PostgreSQL y datos ficticios de demo.
 
 > **Estado:** primera versión para compartir y probar. **No es definitiva.**
 > Los cambios posteriores se entregarán como scripts incrementales.
@@ -9,6 +9,7 @@ Esta carpeta contiene el esquema inicial de PostgreSQL del proyecto.
 
 | Archivo | Descripción |
 | --- | --- |
+| `002_demo_seed.sql` | Datos ficticios R01: un hotel, dos tipos, tres habitaciones activas y dos hu?spedes. Repetible. |
 | `001_initial_schema.sql` | Esquema inicial: extensión, esquema `hotel`, 16 tablas, índices, triggers y roles iniciales. |
 
 ## Requisitos
@@ -19,7 +20,7 @@ Esta carpeta contiene el esquema inicial de PostgreSQL del proyecto.
 
 ## Orden de ejecución
 
-Por ahora hay un solo script. Cada integrante lo ejecuta en **su propia base local**.
+Ejecutar los scripts en orden en **una base propia de demo vac?a**. El esquema se aplica una vez; el seed puede repetirse.
 
 1. Crear una base vacía llamada `hotel_management`:
    ```sql
@@ -73,3 +74,49 @@ La guía de coordinación indica 17 tablas, pero el script crea **16**. Queda po
 
 - El SQL es la fuente de verdad del modelo. Las entidades y el `DbContext` se generarán después a partir de este esquema.
 - No se versionan contraseñas ni cadenas de conexión.
+
+## R01: datos de demo
+
+Despu?s del esquema, ejecutar el seed en la misma base. En una base nueva de
+prueba, estos comandos aplican el esquema de forma at?mica y el seed dos veces.
+Usar las credenciales locales mediante el prompt o un archivo pgpass; no guardarlas
+en el repositorio. Cambiar `postgres` por el usuario local con permisos de creaci?n.
+
+```powershell
+createdb -h localhost -U postgres hotel_management_demo
+psql -h localhost -U postgres -d hotel_management_demo -v ON_ERROR_STOP=1 -1 -f database/001_initial_schema.sql
+psql -h localhost -U postgres -d hotel_management_demo -v ON_ERROR_STOP=1 -f database/002_demo_seed.sql
+psql -h localhost -U postgres -d hotel_management_demo -v ON_ERROR_STOP=1 -f database/002_demo_seed.sql
+```
+
+El seed usa una transacci?n y las restricciones ?nicas existentes: tax_id del hotel
+`DEMO-R01-HOTEL`, nombre del tipo dentro del hotel, n?mero de habitaci?n dentro del
+hotel y documento del hu?sped. Resuelve las relaciones mediante esas claves sin
+suponer IDs. `ON CONFLICT DO NOTHING` conserva los datos existentes; no actualiza
+precios ni sobrescribe ediciones al repetirlo. Las secuencias pueden avanzar aunque
+se omitan inserciones, por lo que los IDs no tienen que ser consecutivos.
+No incluye usuarios ni contrase?as. Todos los nombres, documentos y direcciones
+son ficticios; los correos usan el dominio reservado `example.invalid`.
+
+En una base reci?n creada, comprobar tras cada ejecuci?n:
+
+```sql
+SELECT 'hotels' AS entidad, count(*) FROM hotel.hotels
+UNION ALL SELECT 'room_types', count(*) FROM hotel.room_types
+UNION ALL SELECT 'rooms', count(*) FROM hotel.rooms
+UNION ALL SELECT 'guests', count(*) FROM hotel.guests;
+-- hotels: 1; room_types: 2; rooms: 3; guests: 2.
+
+SELECT r.room_number, t.name, r.operational_status
+FROM hotel.rooms r
+JOIN hotel.room_types t
+  ON (r.room_type_id, r.hotel_id) = (t.room_type_id, t.hotel_id)
+ORDER BY r.room_number;
+-- DEMO-101 / Demo Simple; DEMO-102 y DEMO-103 / Demo Doble; todas ACTIVE.
+```
+
+Validaci?n R01 realizada con PostgreSQL 18.6 en una instancia temporal aislada:
+esquema aplicado sobre base vac?a (16 tablas y 4 roles); seed aplicado dos veces,
+comparando todas las columnas e IDs de las cuatro tablas entre ejecuciones.
+Resultado: mismo conjunto de datos, sin registros duplicados, con relaciones
+hotel/tipo/habitaci?n v?lidas. El esquema inicial permanece sin cambios.
