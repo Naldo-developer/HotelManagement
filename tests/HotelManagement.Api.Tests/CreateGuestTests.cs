@@ -1,0 +1,108 @@
+﻿using HotelManagement.Application.Configuration;
+using HotelManagement.Application.DTOs.Guests;
+using HotelManagement.Application.Exceptions;
+using HotelManagement.Application.UseCases.Guests.Commands;
+using HotelManagement.Domain.Entities;
+using HotelManagement.Domain.Repositories;
+using MediatR;
+using Microsoft.Extensions.DependencyInjection;
+
+namespace HotelManagement.Api.Tests;
+
+public class CreateGuestTests
+{
+    [Fact]
+    public async Task Valid_guest_is_created_with_generated_id()
+    {
+        var (sender, repo) = Build();
+
+        var result = await sender.Send(new CreateGuestCommand(new CreateGuestDto
+        {
+            FirstName = "  Ana ",
+            LastName = "Pérez",
+            DocumentType = "DNI",
+            DocumentNumber = "12345678"
+        }));
+
+        Assert.Equal(1, result.Id);
+        Assert.Equal("Ana", result.FirstName);
+        Assert.Single(repo.Guests);
+    }
+
+    [Fact]
+    public async Task Duplicate_document_throws_conflict()
+    {
+        var (sender, _) = Build();
+        var dto = new CreateGuestDto
+        {
+            FirstName = "Ana", LastName = "Pérez",
+            DocumentType = "DNI", DocumentNumber = "12345678"
+        };
+
+        await sender.Send(new CreateGuestCommand(dto));
+
+        await Assert.ThrowsAsync<BusinessConflictException>(
+            () => sender.Send(new CreateGuestCommand(dto)));
+    }
+
+    [Fact]
+    public async Task Document_type_without_number_is_rejected()
+    {
+        var (sender, repo) = Build();
+
+        await Assert.ThrowsAsync<BusinessValidationException>(
+            () => sender.Send(new CreateGuestCommand(new CreateGuestDto
+            {
+                FirstName = "Ana", LastName = "Pérez", DocumentType = "DNI"
+            })));
+
+        Assert.Empty(repo.Guests);
+    }
+
+    [Fact]
+    public async Task Guests_without_document_can_be_registered_twice()
+    {
+        var (sender, repo) = Build();
+        var dto = new CreateGuestDto { FirstName = "Ana", LastName = "Pérez" };
+
+        await sender.Send(new CreateGuestCommand(dto));
+        await sender.Send(new CreateGuestCommand(dto));
+
+        Assert.Equal(2, repo.Guests.Count);
+    }
+
+    private static (ISender Sender, FakeGuestRepository Repo) Build()
+    {
+        var repo = new FakeGuestRepository();
+        var services = new ServiceCollection();
+        services.AddLogging();
+        services.AddApplication();
+        services.AddSingleton<IGuestRepository>(repo);
+        return (services.BuildServiceProvider().GetRequiredService<ISender>(), repo);
+    }
+
+    private sealed class FakeGuestRepository : IGuestRepository
+    {
+        public List<Guest> Guests { get; } = [];
+
+        public Task<Guest?> GetByIdAsync(long id, CancellationToken cancellationToken) =>
+            Task.FromResult(Guests.FirstOrDefault(g => g.GuestId == id));
+
+        public Task<IReadOnlyList<Guest>> GetAllAsync(
+            string? name, string? documentType, string? documentNumber,
+            int page, int pageSize, CancellationToken cancellationToken) =>
+            Task.FromResult<IReadOnlyList<Guest>>(Guests);
+
+        public Task<bool> DocumentExistsAsync(
+            string documentType, string documentNumber, CancellationToken cancellationToken) =>
+            Task.FromResult(Guests.Any(g =>
+                g.DocumentType == documentType && g.DocumentNumber == documentNumber));
+
+        public Task<Guest> CreateAsync(Guest guest, CancellationToken cancellationToken)
+        {
+            guest.GuestId = Guests.Count + 1;
+            Guests.Add(guest);
+            return Task.FromResult(guest);
+        }
+    }
+}

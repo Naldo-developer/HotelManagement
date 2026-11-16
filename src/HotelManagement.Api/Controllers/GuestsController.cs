@@ -2,6 +2,7 @@ using HotelManagement.Application.DTOs.Guests;
 using HotelManagement.Application.UseCases.Guests.Queries;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
+using HotelManagement.Application.UseCases.Guests.Commands;
 
 namespace HotelManagement.Api.Controllers;
 
@@ -28,5 +29,13 @@ public class GuestsController : ControllerBase
     {
         var result = await _sender.Send(new GetGuestByIdQuery(id));
         return Ok(result);
+    }
+    [HttpPost]
+    public async Task<ActionResult<GuestDto>> CreateGuest([FromBody] CreateGuestDto input)
+    {
+        var result = await _sender.Send(
+            new CreateGuestCommand(input), HttpContext.RequestAborted);
+
+        return CreatedAtAction(nameof(GetGuestById), new { id = result.Id }, result);
     }
 }
