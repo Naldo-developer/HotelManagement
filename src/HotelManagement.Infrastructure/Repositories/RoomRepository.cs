@@ -73,36 +73,65 @@ public class RoomRepository(HotelManagementDbContext context) : IRoomRepository
     public Task<bool> RoomNumberExistsAsync(
         long hotelId,
         string roomNumber,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken,
+        long? excludeRoomId = null)
     {
-        return context.Rooms.AnyAsync(
-            room => room.HotelId == hotelId && room.RoomNumber == roomNumber,
-            cancellationToken);
+        var rooms = context.Rooms.Where(room =>
+            room.HotelId == hotelId && room.RoomNumber == roomNumber);
+
+        if (excludeRoomId.HasValue)
+        {
+            rooms = rooms.Where(room => room.RoomId != excludeRoomId.Value);
+        }
+
+        return rooms.AnyAsync(cancellationToken);
     }
 
     public async Task<Room> CreateAsync(Room room, CancellationToken cancellationToken)
     {
         context.Rooms.Add(room);
+        await SaveRoomChangesAsync(cancellationToken);
+        return room;
+    }
 
+    public async Task UpdateAsync(Room room, CancellationToken cancellationToken)
+    {
+        var entry = context.Rooms.Attach(room);
+
+        entry.Property(r => r.HotelId).IsModified = true;
+        entry.Property(r => r.RoomTypeId).IsModified = true;
+        entry.Property(r => r.RoomNumber).IsModified = true;
+        entry.Property(r => r.Floor).IsModified = true;
+
+        try
+        {
+            await SaveRoomChangesAsync(cancellationToken);
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            throw new ResourceNotFoundException("La habitación ya no existe.");
+        }
+    }
+
+    private async Task SaveRoomChangesAsync(CancellationToken cancellationToken)
+    {
         try
         {
             await context.SaveChangesAsync(cancellationToken);
         }
         catch (DbUpdateException ex) when (ex.InnerException is PostgresException
-               { SqlState: PostgresErrorCodes.UniqueViolation,
-                 ConstraintName: "uq_rooms_hotel_number" })
+                                           { SqlState: PostgresErrorCodes.UniqueViolation,
+                                               ConstraintName: "uq_rooms_hotel_number" })
         {
             throw new BusinessConflictException(
                 "Ya existe una habitación con ese número en el hotel.");
         }
         catch (DbUpdateException ex) when (ex.InnerException is PostgresException
-               { SqlState: PostgresErrorCodes.ForeignKeyViolation,
-                 ConstraintName: "fk_rooms_room_type_hotel" })
+                                           { SqlState: PostgresErrorCodes.ForeignKeyViolation,
+                                               ConstraintName: "fk_rooms_room_type_hotel" })
         {
             throw new BusinessValidationException(
                 "El tipo de habitación debe existir y pertenecer al hotel indicado.");
         }
-
-        return room;
     }
 }
