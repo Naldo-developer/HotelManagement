@@ -18,6 +18,16 @@ public class RoomsController(ISender sender) : ControllerBase
 
         return Ok(rooms);
     }
+    
+    [HttpGet("availability")]
+    public async Task<IActionResult> GetAvailability(
+        [FromQuery] RoomAvailabilityFilterDto filter)
+    {
+        var rooms = await sender.Send(
+            new GetAvailableRoomsQuery(filter), HttpContext.RequestAborted);
+
+        return Ok(rooms);
+    }
 
     [HttpGet("{id:long}")]
     public async Task<IActionResult> GetById(long id)

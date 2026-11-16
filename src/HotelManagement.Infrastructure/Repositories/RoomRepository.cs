@@ -51,6 +51,35 @@ public class RoomRepository(HotelManagementDbContext context) : IRoomRepository
             .Take(pageSize)
             .ToListAsync(cancellationToken);
     }
+    
+    public Task<List<Room>> GetAvailableAsync(
+        long hotelId,
+        DateOnly checkInDate,
+        DateOnly checkOutDate,
+        long? roomTypeId,
+        CancellationToken cancellationToken)
+    {
+        var rooms = context.Rooms
+            .AsNoTracking()
+            .Where(room => room.HotelId == hotelId &&
+                           room.OperationalStatus == "ACTIVE");
+
+        if (roomTypeId.HasValue)
+        {
+            rooms = rooms.Where(room => room.RoomTypeId == roomTypeId.Value);
+        }
+
+        return rooms
+            .Where(room => !room.Reservations.Any(reservation =>
+                (reservation.Status == "PENDING" ||
+                 reservation.Status == "CONFIRMED" ||
+                 reservation.Status == "CHECKED_IN") &&
+                reservation.CheckInDate < checkOutDate &&
+                reservation.CheckOutDate > checkInDate))
+            .OrderBy(room => room.RoomNumber)
+            .ThenBy(room => room.RoomId)
+            .ToListAsync(cancellationToken);
+    }
 
     public Task<bool> HotelExistsAsync(
         long hotelId,
