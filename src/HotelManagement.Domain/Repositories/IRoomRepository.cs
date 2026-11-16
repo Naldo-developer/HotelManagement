@@ -21,7 +21,12 @@ public interface IRoomRepository
         long roomTypeId, long hotelId, CancellationToken cancellationToken);
 
     Task<bool> RoomNumberExistsAsync(
-        long hotelId, string roomNumber, CancellationToken cancellationToken);
+        long hotelId,
+        string roomNumber,
+        CancellationToken cancellationToken,
+        long? excludeRoomId = null);
 
     Task<Room> CreateAsync(Room room, CancellationToken cancellationToken);
+    
+    Task UpdateAsync(Room room, CancellationToken cancellationToken);
 }

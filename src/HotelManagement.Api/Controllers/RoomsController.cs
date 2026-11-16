@@ -36,4 +36,13 @@ public class RoomsController(ISender sender) : ControllerBase
 
         return CreatedAtAction(nameof(GetById), new { id = room.RoomId }, room);
     }
+    
+    [HttpPut("{id:long}")]
+    public async Task<IActionResult> Update(long id, [FromBody] UpdateRoomDto input)
+    {
+        var room = await sender.Send(
+            new UpdateRoomCommand(id, input), HttpContext.RequestAborted);
+
+        return Ok(room);
+    }
 }
