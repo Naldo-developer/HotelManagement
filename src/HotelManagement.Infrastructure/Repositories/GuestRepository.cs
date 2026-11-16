@@ -88,4 +88,35 @@ public class GuestRepository : IGuestRepository
 
         return guest;
     }
+    public Task<bool> DocumentExistsForOtherGuestAsync(
+        string documentType,
+        string documentNumber,
+        long excludedGuestId,
+        CancellationToken cancellationToken)
+    {
+        return _context.Guests.AnyAsync(
+            g => g.GuestId != excludedGuestId
+                 && g.DocumentType == documentType
+                 && g.DocumentNumber == documentNumber,
+            cancellationToken);
+    }
+
+    public async Task<Guest> UpdateAsync(Guest guest, CancellationToken cancellationToken)
+    {
+        _context.Guests.Update(guest);
+
+        try
+        {
+            await _context.SaveChangesAsync(cancellationToken);
+        }
+        catch (DbUpdateException ex) when (ex.InnerException is PostgresException
+                                           { SqlState: PostgresErrorCodes.UniqueViolation,
+                                               ConstraintName: "uq_guests_document" })
+        {
+            throw new BusinessConflictException(
+                "Ya existe un huésped con ese documento.");
+        }
+
+        return guest;
+    }
 }

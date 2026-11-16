@@ -38,4 +38,13 @@ public class GuestsController : ControllerBase
 
         return CreatedAtAction(nameof(GetGuestById), new { id = result.Id }, result);
     }
+    [HttpPut("{id:long}")]
+    public async Task<ActionResult<GuestDto>> UpdateGuest(
+        long id, [FromBody] UpdateGuestDto input)
+    {
+        var result = await _sender.Send(
+            new UpdateGuestCommand(id, input), HttpContext.RequestAborted);
+
+        return Ok(result);
+    }
 }
