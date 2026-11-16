@@ -15,6 +15,14 @@ public interface IRoomRepository
         int page,
         int pageSize,
         CancellationToken cancellationToken);
+    
+    Task<List<Room>> GetAvailableAsync(
+        long hotelId,
+        DateOnly checkInDate,
+        DateOnly checkOutDate,
+        long? roomTypeId,
+        CancellationToken cancellationToken);
+    
     Task<bool> HotelExistsAsync(long hotelId, CancellationToken cancellationToken);
 
     Task<bool> RoomTypeBelongsToHotelAsync(
