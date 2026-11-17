@@ -7,6 +7,10 @@ Esta carpeta contiene el esquema inicial de PostgreSQL y datos ficticios de demo
 
 ## Contenido
 
+R04 agrega `003_room_period_integrity.sql`, aplicado una vez despues de 001.
+Consultar [el contrato y la actualizacion R04](../docs/r04-integridad.md) antes
+de actualizar una base con datos. No modifica ni reemplaza el esquema inicial.
+
 | Archivo | Descripción |
 | --- | --- |
 | `002_demo_seed.sql` | Datos ficticios R01: un hotel, dos tipos, tres habitaciones activas y dos hu?spedes. Repetible. |

@@ -76,6 +76,10 @@ public class RoomRepository(HotelManagementDbContext context) : IRoomRepository
                  reservation.Status == "CHECKED_IN") &&
                 reservation.CheckInDate < checkOutDate &&
                 reservation.CheckOutDate > checkInDate))
+            .Where(room => !room.Maintenances.Any(maintenance =>
+                (maintenance.Status == "SCHEDULED" || maintenance.Status == "IN_PROGRESS") &&
+                maintenance.StartDate < checkOutDate &&
+                maintenance.EndDate > checkInDate))
             .OrderBy(room => room.RoomNumber)
             .ThenBy(room => room.RoomId)
             .ToListAsync(cancellationToken);
