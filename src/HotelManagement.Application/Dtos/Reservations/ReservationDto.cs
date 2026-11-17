@@ -23,4 +23,6 @@ public class ReservationDto
     public string Status { get; set; } = string.Empty;
 
     public string? SpecialRequests { get; set; }
+    
+    public string? CancellationReason { get; set; }
 }

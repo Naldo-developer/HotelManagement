@@ -137,11 +137,148 @@ public class ReservationRepository(HotelManagementDbContext context)
             postgres.MessageText ==
                 $"La habitación {reservation.RoomId} posee mantenimiento durante el periodo solicitado.")
         {
-            // El trigger puede detectar un mantenimiento creado después de la consulta.
+            // El trigger puede detectar mantenimiento creado después de la consulta.
             throw new BusinessConflictException(
                 "La habitación tiene mantenimiento durante las fechas indicadas.");
         }
 
+        await transaction.CommitAsync(cancellationToken);
+
+        return reservation;
+    }
+
+    public Task<List<Reservation>> GetAllAsync(
+        long? hotelId,
+        long? roomId,
+        long? primaryGuestId,
+        string? status,
+        int page,
+        int pageSize,
+        CancellationToken cancellationToken)
+    {
+        var reservations = context.Reservations.AsNoTracking();
+
+        if (hotelId.HasValue)
+        {
+            reservations = reservations.Where(
+                reservation => reservation.Room.HotelId == hotelId.Value);
+        }
+
+        if (roomId.HasValue)
+        {
+            reservations = reservations.Where(
+                reservation => reservation.RoomId == roomId.Value);
+        }
+
+        if (primaryGuestId.HasValue)
+        {
+            reservations = reservations.Where(
+                reservation => reservation.PrimaryGuestId == primaryGuestId.Value);
+        }
+
+        if (!string.IsNullOrWhiteSpace(status))
+        {
+            reservations = reservations.Where(
+                reservation => reservation.Status == status);
+        }
+
+        if (page < 1 || pageSize < 1 || pageSize > 100)
+        {
+            throw new BusinessValidationException(
+                "La página o el tamaño de página no son válidos.");
+        }
+
+        var offset = ((long)page - 1) * pageSize;
+
+        if (offset > int.MaxValue)
+        {
+            throw new BusinessValidationException(
+                "La página solicitada supera el límite permitido.");
+        }
+
+        return reservations
+            .OrderByDescending(reservation => reservation.ReservationId)
+            .Skip((int)offset)
+            .Take(pageSize)
+            .ToListAsync(cancellationToken);
+    }
+
+    public Task<Reservation?> GetByIdAsync(
+        long reservationId,
+        CancellationToken cancellationToken)
+    {
+        return context.Reservations
+            .AsNoTracking()
+            .SingleOrDefaultAsync(
+                reservation => reservation.ReservationId == reservationId,
+                cancellationToken);
+    }
+
+    public async Task<Reservation> CancelAsync(
+        long reservationId,
+        string cancellationReason,
+        CancellationToken cancellationToken)
+    {
+        if (string.IsNullOrWhiteSpace(cancellationReason) ||
+            cancellationReason.Length > 500)
+        {
+            throw new BusinessValidationException(
+                "El motivo es obligatorio y no debe superar los 500 caracteres.");
+        }
+
+        await using var transaction = await context.Database.BeginTransactionAsync(
+            IsolationLevel.ReadCommitted, cancellationToken);
+
+        await context.Database.ExecuteSqlRawAsync(
+            "SET LOCAL search_path TO hotel, public",
+            cancellationToken);
+
+        // C05 debe bloquear esta misma reserva antes de validar el check-in.
+        var reservations = await context.Reservations
+            .FromSqlInterpolated($"""
+                SELECT *
+                FROM hotel.reservations
+                WHERE reservation_id = {reservationId}
+                FOR UPDATE
+                """)
+            .AsNoTracking()
+            .ToListAsync(cancellationToken);
+
+        var reservation = reservations.SingleOrDefault();
+
+        if (reservation is null)
+        {
+            throw new ResourceNotFoundException(
+                "La reserva indicada no existe.");
+        }
+
+        // Solo una reserva pendiente o confirmada admite cancelación.
+        if (reservation.Status != "PENDING" &&
+            reservation.Status != "CONFIRMED")
+        {
+            throw new BusinessConflictException(
+                "Solo se pueden cancelar reservas pendientes o confirmadas.");
+        }
+
+        var hasStay = await context.Stays.AnyAsync(
+            stay => stay.ReservationId == reservationId,
+            cancellationToken);
+
+        if (hasStay)
+        {
+            throw new BusinessConflictException(
+                "No se puede cancelar una reserva que ya tiene una estadía.");
+        }
+
+        reservation.Status = "CANCELLED";
+        reservation.CancellationReason = cancellationReason.Trim();
+
+        var entry = context.Reservations.Attach(reservation);
+        entry.Property(item => item.Status).IsModified = true;
+        entry.Property(item => item.CancellationReason).IsModified = true;
+
+        // Los triggers registran el historial y liberan el periodo reservado.
+        await context.SaveChangesAsync(cancellationToken);
         await transaction.CommitAsync(cancellationToken);
 
         return reservation;
