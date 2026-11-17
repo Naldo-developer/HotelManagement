@@ -48,7 +48,7 @@ public sealed class RoomPersistenceTests
             await using (var connection = new NpgsqlConnection(connectionString))
             {
                 await connection.OpenAsync();
-                foreach (var file in new[] { "001_initial_schema.sql", "002_demo_seed.sql" })
+                foreach (var file in new[] { "001_initial_schema.sql", "002_demo_seed.sql", "003_room_period_integrity.sql" })
                 {
                     var sql = await File.ReadAllTextAsync(Path.Combine(AppContext.BaseDirectory, "database", file));
                     await using var command = new NpgsqlCommand(sql, connection);

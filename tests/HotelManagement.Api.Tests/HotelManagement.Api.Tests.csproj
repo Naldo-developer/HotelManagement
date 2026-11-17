@@ -24,6 +24,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Include="..\..\database\003_room_period_integrity.sql" Link="database\003_room_period_integrity.sql" CopyToOutputDirectory="PreserveNewest" />
     <None Include="..\..\database\001_initial_schema.sql" Link="database\001_initial_schema.sql" CopyToOutputDirectory="PreserveNewest" />
     <None Include="..\..\database\002_demo_seed.sql" Link="database\002_demo_seed.sql" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
