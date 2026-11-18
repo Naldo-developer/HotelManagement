@@ -9,9 +9,11 @@ const views = {
     inicio: { title: 'Inicio', render: renderHome },
     habitaciones: {
         title: 'Habitaciones',
-        render: (container, param) => {
+        render: (container, param, action) => {
             if (param === 'nueva') {
                 renderRoomForm(container);
+            } else if (param && action === 'editar') {
+                renderRoomForm(container, param);
             } else if (param) {
                 renderRoomDetail(container, param);
             } else {
@@ -25,11 +27,16 @@ const views = {
 
 const DEFAULT_VIEW = 'inicio';
 
-// La ruta tiene la forma #vista o #vista/parametro (por ejemplo #habitaciones/12).
+// La ruta tiene la forma #vista, #vista/parametro o #vista/parametro/accion
+// (por ejemplo #habitaciones/12 o #habitaciones/12/editar).
 function parseRoute() {
-    const [name = '', param = ''] = window.location.hash.replace('#', '').split('/');
+    const [name = '', param = '', action = ''] = window.location.hash.replace('#', '').split('/');
     const known = Object.hasOwn(views, name);
-    return { name: known ? name : DEFAULT_VIEW, param: known ? param : '' };
+    return {
+        name: known ? name : DEFAULT_VIEW,
+        param: known ? param : '',
+        action: known ? action : '',
+    };
 }
 
 function renderNav(active) {
@@ -47,7 +54,7 @@ function renderNav(active) {
 }
 
 function renderRoute() {
-    const { name, param } = parseRoute();
+    const { name, param, action } = parseRoute();
     const view = views[name];
     const container = document.getElementById('view');
 
@@ -56,7 +63,7 @@ function renderRoute() {
     renderNav(name);
     document.title = `${view.title} · HotelManagement`;
     container.replaceChildren();
-    view.render(container, param);
+    view.render(container, param, action);
 }
 
 function placeholder(title, commit) {

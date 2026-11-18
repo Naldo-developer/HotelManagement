@@ -266,8 +266,10 @@ export async function renderRoomDetail(container, rawId) {
                 el('dd', { text: String(value) }),
             ]));
 
+        const edit = el('a', { href: `#habitaciones/${room.roomId}/editar`, class: 'btn', text: 'Editar' });
+
         status.replaceWith(details);
-        card.append(el('div', { class: 'actions' }, back));
+        card.append(el('div', { class: 'actions' }, back, edit));
     } catch (error) {
         if (!card.isConnected) {
             return;
