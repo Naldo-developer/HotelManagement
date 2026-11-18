@@ -104,7 +104,8 @@ async function request(method, path, { query, body, signal } = {}) {
 
         if (!response.ok) {
             const problem = await readProblem(response);
-            if (response.status === 401) {
+            // Un 401 del propio login o de /api/auth/me es normal y lo maneja su pantalla.
+            if (response.status === 401 && !path.startsWith('/api/auth/')) {
                 window.dispatchEvent(new CustomEvent('api:unauthorized'));
             }
             if (response.status === 403) {

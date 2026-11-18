@@ -1,5 +1,7 @@
 import { api, onLoadingChange } from './api.js';
-import { bindLoadingIndicator, clearMessages, flushQueuedMessages, showError, showMessage } from './ui.js';
+import { bindLoadingIndicator, clearMessages, el, flushQueuedMessages, queueMessage, showError, showMessage } from './ui.js';
+import { fetchCurrentUser, getUser, hasAnyRole, logout, setUser } from './session.js';
+import { renderLogin } from './views/login.js';
 import { renderRoomDetail, renderRoomList } from './views/rooms.js';
 import { renderRoomForm } from './views/room-form.js';
 import { renderGuestDetail, renderGuestList } from './views/guests.js';
@@ -7,8 +9,8 @@ import { renderGuestForm } from './views/guest-form.js';
 import { renderReservationDetail, renderReservationList } from './views/reservations.js';
 import { renderReservationForm } from './views/reservation-form.js';
 
-// Cada pantalla se registra aquí. Los siguientes commits (Y02, Y04B, ...)
-// reemplazan los "placeholder" por su vista real.
+// Cada pantalla se registra aquí. Si una vista define "roles" (códigos de rol),
+// solo la ven y la abren los usuarios que tengan alguno de ellos.
 const views = {
     inicio: { title: 'Inicio', render: renderHome },
     habitaciones: {
@@ -55,8 +57,10 @@ const views = {
 
 const DEFAULT_VIEW = 'inicio';
 
-// La ruta tiene la forma #vista, #vista/parametro o #vista/parametro/accion
-// (por ejemplo #habitaciones/12 o #habitaciones/12/editar).
+// Hash al que volver después de iniciar sesión (por ejemplo tras una sesión vencida).
+let returnTo = '';
+
+// La ruta tiene la forma #vista, #vista/parametro o #vista/parametro/accion.
 function parseRoute() {
     const [name = '', param = '', action = ''] = window.location.hash.replace('#', '').split('/');
     const known = Object.hasOwn(views, name);
@@ -70,45 +74,107 @@ function parseRoute() {
 function renderNav(active) {
     const nav = document.getElementById('nav');
     nav.replaceChildren();
-    Object.entries(views).forEach(([name, view]) => {
-        const link = document.createElement('a');
-        link.href = `#${name}`;
-        link.textContent = view.title;
-        if (name === active) {
-            link.setAttribute('aria-current', 'page');
-        }
-        nav.append(link);
+    Object.entries(views)
+        .filter(([, view]) => hasAnyRole(getUser(), view.roles))
+        .forEach(([name, view]) => {
+            const link = el('a', { href: `#${name}`, text: view.title });
+            if (name === active) {
+                link.setAttribute('aria-current', 'page');
+            }
+            nav.append(link);
+        });
+}
+
+function renderSessionBar() {
+    const bar = document.getElementById('session');
+    bar.replaceChildren();
+
+    const user = getUser();
+    if (!user) {
+        return;
+    }
+
+    const roles = user.roles.length > 0 ? ` · ${user.roles.join(', ')}` : '';
+    const logoutButton = el('button', { type: 'button', class: 'btn secondary', text: 'Cerrar sesión' });
+    logoutButton.addEventListener('click', onLogout);
+
+    bar.append(el('span', { class: 'muted', text: `${user.fullName || user.username}${roles}` }), logoutButton);
+}
+
+// ---------------------------------------------------------------- sesión
+
+function showLogin() {
+    const container = document.getElementById('view');
+    container.replaceChildren();
+    document.getElementById('nav').replaceChildren();
+    renderSessionBar();
+    clearMessages();
+    flushQueuedMessages();
+    document.title = 'Iniciar sesión · HotelManagement';
+
+    renderLogin(container, (user) => {
+        setUser(user);
+        queueMessage(`Sesión iniciada como ${user.fullName || user.username}.`, 'success');
+        history.replaceState(null, '', returnTo || '#inicio');
+        returnTo = '';
+        renderRoute();
     });
 }
 
+// Cualquier 401 fuera del login significa que la sesión ya no es válida.
+function handleUnauthorized() {
+    if (!getUser()) {
+        return; // ya se está mostrando el inicio de sesión
+    }
+    setUser(null);
+    returnTo = window.location.hash;
+    queueMessage('Tu sesión venció. Inicia sesión de nuevo.', 'info');
+    showLogin();
+}
+
+async function onLogout() {
+    try {
+        await logout();
+    } catch (error) {
+        showError(error);
+        return;
+    }
+    returnTo = '';
+    history.replaceState(null, '', '#inicio');
+    queueMessage('Sesión cerrada.', 'info');
+    showLogin();
+}
+
+// ------------------------------------------------------------- navegación
+
 function renderRoute() {
+    if (!getUser()) {
+        returnTo = window.location.hash;
+        showLogin();
+        return;
+    }
+
     const { name, param, action } = parseRoute();
     const view = views[name];
     const container = document.getElementById('view');
 
     clearMessages();
     flushQueuedMessages();
+    renderSessionBar();
     renderNav(name);
     document.title = `${view.title} · HotelManagement`;
     container.replaceChildren();
+
+    if (!hasAnyRole(getUser(), view.roles)) {
+        container.append(el('section', { class: 'card' },
+            el('h1', { text: 'Acceso restringido' }),
+            el('p', { class: 'muted', text: 'Tu cuenta no tiene permiso para ver esta sección.' }),
+            el('div', { class: 'actions' }, el('a', { href: '#inicio', class: 'btn secondary', text: 'Ir al inicio' }))));
+        showMessage('No tienes permiso para ver esta sección.', 'error');
+        return;
+    }
+
     view.render(container, param, action);
-}
-
-function placeholder(title, commit) {
-    return (container) => {
-        const card = document.createElement('section');
-        card.className = 'card';
-
-        const heading = document.createElement('h1');
-        heading.textContent = title;
-
-        const text = document.createElement('p');
-        text.className = 'muted';
-        text.textContent = `Esta pantalla se implementa en el commit ${commit}.`;
-
-        card.append(heading, text);
-        container.append(card);
-    };
 }
 
 function renderHome(container) {
@@ -164,6 +230,28 @@ async function run(button, action) {
     }
 }
 
+// ---------------------------------------------------------------- arranque
+
+async function start() {
+    try {
+        await fetchCurrentUser(); // con sesión muestra la app; sin sesión, el inicio de sesión
+        renderRoute();
+    } catch (error) {
+        const container = document.getElementById('view');
+        const retry = el('button', { type: 'button', class: 'btn', text: 'Reintentar' });
+        retry.addEventListener('click', () => {
+            clearMessages();
+            start();
+        });
+        container.replaceChildren(el('section', { class: 'card' },
+            el('h1', { text: 'No se pudo conectar' }),
+            el('p', { class: 'muted', text: 'No fue posible comprobar tu sesión con el servidor.' }),
+            el('div', { class: 'actions' }, retry)));
+        showError(error);
+    }
+}
+
 bindLoadingIndicator(onLoadingChange);
 window.addEventListener('hashchange', renderRoute);
-renderRoute();
+window.addEventListener('api:unauthorized', handleUnauthorized);
+start();
