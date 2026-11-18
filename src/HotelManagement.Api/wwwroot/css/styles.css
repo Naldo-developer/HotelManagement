@@ -248,3 +248,33 @@ td a { color: var(--primary); }
 .details dd { margin: 0; }
 
 a.btn { display: inline-block; text-decoration: none; }
+
+/* ---- Y03: encabezado de tarjeta y formulario ---- */
+.card-header {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    margin-bottom: 0.75rem;
+}
+
+.card-header h1 { margin: 0; }
+
+.form-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
+    gap: 1rem;
+}
+
+.form-grid .field input,
+.form-grid .field select { width: 100%; }
+
+.form-actions {
+    grid-column: 1 / -1;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.field small { font-size: 0.8rem; }

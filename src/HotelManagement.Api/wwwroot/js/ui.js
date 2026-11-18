@@ -39,3 +39,43 @@ export function bindLoadingIndicator(onLoadingChange) {
         bar.hidden = !isLoading;
     });
 }
+
+// ---- Y03: mensajes en cola, creación de elementos y listas desplegables ----
+
+const queuedMessages = [];
+
+// Un mensaje en cola se muestra después del siguiente cambio de pantalla
+// (por ejemplo "Habitación creada" al abrir el detalle).
+export function queueMessage(text, type = 'info') {
+    queuedMessages.push({ text, type });
+}
+
+export function flushQueuedMessages() {
+    queuedMessages.splice(0).forEach(({ text, type }) => showMessage(text, type));
+}
+
+export function el(tag, props = {}, ...children) {
+    const node = document.createElement(tag);
+    Object.entries(props).forEach(([key, value]) => {
+        if (key === 'class') {
+            node.className = value;
+        } else if (key === 'text') {
+            node.textContent = value;
+        } else if (key in node) {
+            node[key] = value;
+        } else {
+            node.setAttribute(key, value);
+        }
+    });
+    node.append(...children);
+    return node;
+}
+
+export function setSelectOptions(select, placeholder, items, valueKey, selected = '') {
+    select.replaceChildren(
+        el('option', { value: '', text: placeholder }),
+        ...items.map((item) => el('option', { value: String(item[valueKey]), text: item.name })),
+    );
+    const wanted = String(selected ?? '');
+    select.value = items.some((item) => String(item[valueKey]) === wanted) ? wanted : '';
+}
