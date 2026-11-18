@@ -1,20 +1,27 @@
 import { api, onLoadingChange } from './api.js';
 import { bindLoadingIndicator, clearMessages, showError, showMessage } from './ui.js';
+import { renderRoomDetail, renderRoomList } from './views/rooms.js';
 
 // Cada pantalla se registra aquí. Los siguientes commits (Y02, Y04B, ...)
 // reemplazan los "placeholder" por su vista real.
 const views = {
     inicio: { title: 'Inicio', render: renderHome },
-    habitaciones: { title: 'Habitaciones', render: placeholder('Habitaciones', 'Y02') },
+    habitaciones: {
+        title: 'Habitaciones',
+        render: (container, param) =>
+            param ? renderRoomDetail(container, param) : renderRoomList(container),
+    },
     huespedes: { title: 'Huéspedes', render: placeholder('Huéspedes', 'Y04B') },
     reservas: { title: 'Reservas', render: placeholder('Reservas', 'Y05') },
 };
 
 const DEFAULT_VIEW = 'inicio';
 
-function currentViewName() {
-    const name = window.location.hash.replace('#', '');
-    return Object.hasOwn(views, name) ? name : DEFAULT_VIEW;
+// La ruta tiene la forma #vista o #vista/parametro (por ejemplo #habitaciones/12).
+function parseRoute() {
+    const [name = '', param = ''] = window.location.hash.replace('#', '').split('/');
+    const known = Object.hasOwn(views, name);
+    return { name: known ? name : DEFAULT_VIEW, param: known ? param : '' };
 }
 
 function renderNav(active) {
@@ -32,7 +39,7 @@ function renderNav(active) {
 }
 
 function renderRoute() {
-    const name = currentViewName();
+    const { name, param } = parseRoute();
     const view = views[name];
     const container = document.getElementById('view');
 
@@ -40,7 +47,7 @@ function renderRoute() {
     renderNav(name);
     document.title = `${view.title} · HotelManagement`;
     container.replaceChildren();
-    view.render(container);
+    view.render(container, param);
 }
 
 function placeholder(title, commit) {
