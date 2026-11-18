@@ -4,6 +4,7 @@ using HotelManagement.Domain.Repositories;
 using HotelManagement.Infrastructure.Configuration;
 using Microsoft.EntityFrameworkCore;
 using Npgsql;
+using System.Data;
 
 namespace HotelManagement.Infrastructure.Repositories;
 
@@ -127,14 +128,58 @@ public class RoomRepository(HotelManagementDbContext context) : IRoomRepository
         return room;
     }
 
-    public async Task UpdateAsync(Room room, CancellationToken cancellationToken)
+    public async Task UpdateAsync(
+        Room room,
+        CancellationToken cancellationToken)
     {
+        await using var transaction =
+            await context.Database.BeginTransactionAsync(
+                IsolationLevel.ReadCommitted,
+                cancellationToken);
+
+        // T05 y C05 también bloquean esta habitación.
+        // Leer los valores actuales después de obtener el bloqueo.
+        var rooms = await context.Rooms
+            .FromSqlInterpolated($"""
+                                  SELECT *
+                                  FROM hotel.rooms
+                                  WHERE room_id = {room.RoomId}
+                                  FOR UPDATE
+                                  """)
+            .AsNoTracking()
+            .ToListAsync(cancellationToken);
+
+        var currentRoom = rooms.SingleOrDefault();
+
+        if (currentRoom is null)
+        {
+            throw new ResourceNotFoundException(
+                "La habitación ya no existe.");
+        }
+
+        var changesHotelOrType =
+            currentRoom.HotelId != room.HotelId ||
+            currentRoom.RoomTypeId != room.RoomTypeId;
+
+        if (changesHotelOrType)
+        {
+            var hasReservations = await context.Reservations.AnyAsync(
+                reservation => reservation.RoomId == room.RoomId,
+                cancellationToken);
+
+            if (hasReservations)
+            {
+                throw new BusinessConflictException(
+                    "No se puede cambiar el hotel ni el tipo de una habitación con reservas registradas.");
+            }
+        }
+
         var entry = context.Rooms.Attach(room);
 
-        entry.Property(r => r.HotelId).IsModified = true;
-        entry.Property(r => r.RoomTypeId).IsModified = true;
-        entry.Property(r => r.RoomNumber).IsModified = true;
-        entry.Property(r => r.Floor).IsModified = true;
+        entry.Property(item => item.HotelId).IsModified = true;
+        entry.Property(item => item.RoomTypeId).IsModified = true;
+        entry.Property(item => item.RoomNumber).IsModified = true;
+        entry.Property(item => item.Floor).IsModified = true;
 
         try
         {
@@ -142,8 +187,11 @@ public class RoomRepository(HotelManagementDbContext context) : IRoomRepository
         }
         catch (DbUpdateConcurrencyException)
         {
-            throw new ResourceNotFoundException("La habitación ya no existe.");
+            throw new ResourceNotFoundException(
+                "La habitación ya no existe.");
         }
+
+        await transaction.CommitAsync(cancellationToken);
     }
 
     private async Task SaveRoomChangesAsync(CancellationToken cancellationToken)
