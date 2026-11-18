@@ -4,6 +4,8 @@ import { renderRoomDetail, renderRoomList } from './views/rooms.js';
 import { renderRoomForm } from './views/room-form.js';
 import { renderGuestDetail, renderGuestList } from './views/guests.js';
 import { renderGuestForm } from './views/guest-form.js';
+import { renderReservationDetail, renderReservationList } from './views/reservations.js';
+import { renderReservationForm } from './views/reservation-form.js';
 
 // Cada pantalla se registra aquí. Los siguientes commits (Y02, Y04B, ...)
 // reemplazan los "placeholder" por su vista real.
@@ -37,7 +39,18 @@ const views = {
             }
         },
     },
-    reservas: { title: 'Reservas', render: placeholder('Reservas', 'Y05') },
+    reservas: {
+        title: 'Reservas',
+        render: (container, param, action) => {
+            if (param === 'nueva') {
+                renderReservationForm(container);
+            } else if (param) {
+                renderReservationDetail(container, param, action === 'cancelar');
+            } else {
+                renderReservationList(container);
+            }
+        },
+    },
 };
 
 const DEFAULT_VIEW = 'inicio';

@@ -1,3 +1,5 @@
+// Cliente central de la API. Todas las rutas son relativas al mismo origen (/api/...).
+
 const loadingListeners = new Set();
 let pendingRequests = 0;
 
@@ -125,5 +127,6 @@ export const api = {
     get: (path, query, signal) => request('GET', path, { query, signal }),
     post: (path, body) => request('POST', path, { body }),
     put: (path, body) => request('PUT', path, { body }),
+    patch: (path, body) => request('PATCH', path, { body }),
     delete: (path) => request('DELETE', path),
 };

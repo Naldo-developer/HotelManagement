@@ -278,3 +278,65 @@ a.btn { display: inline-block; text-decoration: none; }
 }
 
 .field small { font-size: 0.8rem; }
+
+/* ---- Y05: reservas ---- */
+.step-title { margin: 0 0 0.75rem; font-size: 1.1rem; }
+
+.choice-list { display: grid; gap: 0.5rem; margin-top: 0.5rem; }
+
+.choice {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.55rem 0.75rem;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    cursor: pointer;
+}
+
+.choice:has(input:checked) { border-color: var(--primary); background: var(--info-bg); }
+
+.summary {
+    margin: 1rem 0 0.5rem;
+    padding: 0.75rem 1rem;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+}
+
+.summary .details { margin: 0; }
+
+.status {
+    display: inline-block;
+    padding: 0.1rem 0.6rem;
+    border-radius: 999px;
+    border: 1px solid var(--border);
+    font-size: 0.8rem;
+    white-space: nowrap;
+}
+
+.status.CONFIRMED, .status.COMPLETED { background: var(--success-bg); color: var(--success-text); }
+.status.PENDING, .status.CHECKED_IN { background: var(--info-bg); color: var(--info-text); }
+.status.CANCELLED, .status.NO_SHOW { background: var(--error-bg); color: var(--error-text); }
+
+.btn.danger { background: var(--error-text); border-color: var(--error-text); color: var(--bg); }
+
+.inline-form {
+    display: grid;
+    gap: 0.75rem;
+    margin-top: 1rem;
+    padding: 1rem;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+}
+
+.field textarea {
+    width: 100%;
+    padding: 0.45rem 0.6rem;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: var(--bg);
+    color: var(--text);
+    font: inherit;
+    resize: vertical;
+}
