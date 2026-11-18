@@ -13,6 +13,10 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Npgsql;
+using System.Security.Claims;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Http;
 
 namespace HotelManagement.Api.Tests;
 
@@ -62,12 +66,36 @@ public sealed class RoomPersistenceTests
             builder.Services.AddInfrastructure(connectionString);
             builder.Services.AddApplication();
             builder.Services.AddApiErrorHandling();
+            builder.Services.AddApiAuthentication();
             builder.Services.AddControllers().AddApplicationPart(typeof(RoomsController).Assembly);
             await using var app = builder.Build();
             app.UseExceptionHandler(new ExceptionHandlerOptions { SuppressDiagnosticsCallback = _ => true });
+            app.UseAuthentication();
+            app.UseAuthorization();
+            app.MapPost("/test/login/{role}", async (HttpContext context, string role) =>
+            {
+                var claims = new List<Claim>
+                {
+                    new(ClaimTypes.Name, "usuario.prueba"),
+                    new(ClaimTypes.Role, role)
+                };
+                var identity = new ClaimsIdentity(
+                    claims, CookieAuthenticationDefaults.AuthenticationScheme);
+
+                await context.SignInAsync(
+                    CookieAuthenticationDefaults.AuthenticationScheme,
+                    new ClaimsPrincipal(identity));
+
+                return Results.NoContent();
+            });
             app.MapControllers();
             await app.StartAsync();
+            using var anonymous = app.GetTestClient();
+            using (var unauthorized = await anonymous.GetAsync("/api/rooms"))
+                Assert.Equal(HttpStatusCode.Unauthorized, unauthorized.StatusCode);
+
             using var client = app.GetTestClient();
+            await SignInAsync(client, "ADMIN");
 
             var rooms = await client.GetFromJsonAsync<List<RoomDto>>("/api/rooms");
             Assert.NotNull(rooms);
@@ -81,6 +109,10 @@ public sealed class RoomPersistenceTests
                 Floor = "2",
                 OperationalStatus = "ACTIVE"
             };
+            using var reception = app.GetTestClient();
+            await SignInAsync(reception, "RECEPTION");
+            using (var forbidden = await reception.PostAsJsonAsync("/api/rooms", input))
+                Assert.Equal(HttpStatusCode.Forbidden, forbidden.StatusCode);
             using var created = await client.PostAsJsonAsync("/api/rooms", input);
             Assert.Equal(HttpStatusCode.Created, created.StatusCode);
             var room = await created.Content.ReadFromJsonAsync<RoomDto>();
@@ -119,7 +151,14 @@ public sealed class RoomPersistenceTests
             await drop.ExecuteNonQueryAsync();
         }
     }
+    private static async Task SignInAsync(HttpClient client, string role)
+    {
+        using var login = await client.PostAsync($"/test/login/{role}", null);
+        Assert.Equal(HttpStatusCode.NoContent, login.StatusCode);
 
+        var cookie = login.Headers.GetValues("Set-Cookie").First().Split(';')[0];
+        client.DefaultRequestHeaders.Add("Cookie", cookie);
+    }
     private static void AssertRoom(RoomDto room, CreateRoomDto input)
     {
         Assert.Equal(input.HotelId, room.HotelId);

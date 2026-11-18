@@ -1,5 +1,5 @@
 ﻿using Microsoft.AspNetCore.Authentication.Cookies;
-
+using HotelManagement.Api.Authorization;
 namespace HotelManagement.Api.Configuration;
 
 public static class AuthenticationExtensions
@@ -30,8 +30,14 @@ public static class AuthenticationExtensions
                 };
             });
 
-        services.AddAuthorization();
+        services.AddAuthorization(options =>
+        {
+            options.AddPolicy(AppPolicies.Operations, policy =>
+                policy.RequireRole(AppRoles.Reception, AppRoles.Admin));
 
+            options.AddPolicy(AppPolicies.Configuration, policy =>
+                policy.RequireRole(AppRoles.Admin));
+        });
         return services;
     }
 }

@@ -3,11 +3,14 @@ using HotelManagement.Application.UseCases.Reservations.Commands;
 using HotelManagement.Application.UseCases.Reservations.Queries;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
+using HotelManagement.Api.Authorization;
+using Microsoft.AspNetCore.Authorization;
 
 namespace HotelManagement.Api.Controllers;
 
 [ApiController]
 [Route("api/reservations")]
+[Authorize(Policy = AppPolicies.Operations)]
 public class ReservationsController(ISender sender) : ControllerBase
 {
     [HttpGet]
