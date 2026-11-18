@@ -25,6 +25,7 @@ public static class InfrastructureServicesExtensions
         services.AddScoped<IHotelRepository, HotelRepository>();
         services.AddScoped<IRoomTypeRepository, RoomTypeRepository>();
         services.AddScoped<IReservationRepository, ReservationRepository>();
+        services.AddScoped<IStayRepository, StayRepository>();
 
         return services;
     }
