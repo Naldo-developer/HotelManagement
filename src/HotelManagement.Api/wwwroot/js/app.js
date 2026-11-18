@@ -1,6 +1,7 @@
 import { api, onLoadingChange } from './api.js';
-import { bindLoadingIndicator, clearMessages, showError, showMessage } from './ui.js';
+import { bindLoadingIndicator, clearMessages, flushQueuedMessages, showError, showMessage } from './ui.js';
 import { renderRoomDetail, renderRoomList } from './views/rooms.js';
+import { renderRoomForm } from './views/room-form.js';
 
 // Cada pantalla se registra aquí. Los siguientes commits (Y02, Y04B, ...)
 // reemplazan los "placeholder" por su vista real.
@@ -8,8 +9,15 @@ const views = {
     inicio: { title: 'Inicio', render: renderHome },
     habitaciones: {
         title: 'Habitaciones',
-        render: (container, param) =>
-            param ? renderRoomDetail(container, param) : renderRoomList(container),
+        render: (container, param) => {
+            if (param === 'nueva') {
+                renderRoomForm(container);
+            } else if (param) {
+                renderRoomDetail(container, param);
+            } else {
+                renderRoomList(container);
+            }
+        },
     },
     huespedes: { title: 'Huéspedes', render: placeholder('Huéspedes', 'Y04B') },
     reservas: { title: 'Reservas', render: placeholder('Reservas', 'Y05') },
@@ -44,6 +52,7 @@ function renderRoute() {
     const container = document.getElementById('view');
 
     clearMessages();
+    flushQueuedMessages();
     renderNav(name);
     document.title = `${view.title} · HotelManagement`;
     container.replaceChildren();
