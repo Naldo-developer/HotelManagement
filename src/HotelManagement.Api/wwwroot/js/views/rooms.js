@@ -1,5 +1,5 @@
 import { api } from '../api.js';
-import { getHotels, getRoomTypes, ROOM_STATUSES } from '../catalogs.js';
+import { getHotels, getRoomTypes, hotelName, resolveNames, ROOM_STATUSES, typeName } from '../catalogs.js';
 import { el, setSelectOptions, showError, showMessage } from '../ui.js';
 
 const PAGE_SIZES = [10, 20, 50, 100];
@@ -13,24 +13,6 @@ let currentRequest = null;
 
 const isPositiveInteger = (value) => /^[1-9]\d*$/.test(value);
 const statusLabel = (status) => ROOM_STATUSES[status] ?? status;
-
-// Traduce IDs a nombres usando los catálogos. Si fallan, se muestran los ID.
-async function resolveNames(rooms) {
-    const hotels = new Map();
-    const types = new Map();
-    try {
-        (await getHotels()).forEach((hotel) => hotels.set(hotel.hotelId, hotel.name));
-        const hotelIds = [...new Set(rooms.map((room) => room.hotelId))];
-        const lists = await Promise.all(hotelIds.map((id) => getRoomTypes(id)));
-        lists.forEach((list) => list.forEach((type) => types.set(type.roomTypeId, type.name)));
-    } catch {
-        // sin nombres: la tabla usa los identificadores
-    }
-    return { hotels, types };
-}
-
-const hotelName = (names, id) => names.hotels.get(id) ?? `ID ${id}`;
-const typeName = (names, id) => names.types.get(id) ?? `ID ${id}`;
 
 // ---------------------------------------------------------------- LISTA
 
