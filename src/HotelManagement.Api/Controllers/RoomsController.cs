@@ -3,11 +3,14 @@ using HotelManagement.Application.UseCases.Rooms.Queries;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using HotelManagement.Application.UseCases.Rooms.Commands;
+using HotelManagement.Api.Authorization;
+using Microsoft.AspNetCore.Authorization;
 
 namespace HotelManagement.Api.Controllers;
 
 [ApiController]
 [Route("api/rooms")]
+[Authorize]
 public class RoomsController(ISender sender) : ControllerBase
 {
     [HttpGet]
@@ -37,7 +40,7 @@ public class RoomsController(ISender sender) : ControllerBase
 
         return Ok(room);
     }
-    
+    [Authorize(Policy = AppPolicies.Configuration)]
     [HttpPost]
     public async Task<IActionResult> Create([FromBody] CreateRoomDto input)
     {
@@ -46,7 +49,7 @@ public class RoomsController(ISender sender) : ControllerBase
 
         return CreatedAtAction(nameof(GetById), new { id = room.RoomId }, room);
     }
-    
+    [Authorize(Policy = AppPolicies.Configuration)]
     [HttpPut("{id:long}")]
     public async Task<IActionResult> Update(long id, [FromBody] UpdateRoomDto input)
     {

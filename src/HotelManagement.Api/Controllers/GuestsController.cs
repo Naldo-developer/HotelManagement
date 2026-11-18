@@ -3,11 +3,14 @@ using HotelManagement.Application.UseCases.Guests.Queries;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using HotelManagement.Application.UseCases.Guests.Commands;
+using HotelManagement.Api.Authorization;
+using Microsoft.AspNetCore.Authorization;
 
 namespace HotelManagement.Api.Controllers;
 
 [ApiController]
 [Route("api/guests")]
+[Authorize(Policy = AppPolicies.Operations)]
 public class GuestsController : ControllerBase
 {
     private readonly ISender _sender;
