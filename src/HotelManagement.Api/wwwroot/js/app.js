@@ -2,6 +2,8 @@ import { api, onLoadingChange } from './api.js';
 import { bindLoadingIndicator, clearMessages, flushQueuedMessages, showError, showMessage } from './ui.js';
 import { renderRoomDetail, renderRoomList } from './views/rooms.js';
 import { renderRoomForm } from './views/room-form.js';
+import { renderGuestDetail, renderGuestList } from './views/guests.js';
+import { renderGuestForm } from './views/guest-form.js';
 
 // Cada pantalla se registra aquí. Los siguientes commits (Y02, Y04B, ...)
 // reemplazan los "placeholder" por su vista real.
@@ -21,7 +23,20 @@ const views = {
             }
         },
     },
-    huespedes: { title: 'Huéspedes', render: placeholder('Huéspedes', 'Y04B') },
+    huespedes: {
+        title: 'Huéspedes',
+        render: (container, param, action) => {
+            if (param === 'nuevo') {
+                renderGuestForm(container);
+            } else if (param && action === 'editar') {
+                renderGuestForm(container, param);
+            } else if (param) {
+                renderGuestDetail(container, param);
+            } else {
+                renderGuestList(container);
+            }
+        },
+    },
     reservas: { title: 'Reservas', render: placeholder('Reservas', 'Y05') },
 };
 
