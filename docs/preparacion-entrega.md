@@ -84,3 +84,36 @@ temporal y el proceso publicado se detuvieron despues de verificar.
 No copiar resultados de una revision antigua como evidencia final. Yadhira debe
 completar Y08 tras R06, Y04A, Y06 y Y07. Ronaldo actualiza el README definitivo
 despues de esa aceptacion. Hasta entonces R07 permanece parcial.
+
+## Actualizacion R06 — 22/11/2026
+
+Rama sincronizada con origin/main 28cfee6; PR #26 sigue abierto.
+R04, T05/T06, C04/C05 y Y07 ya integrados. R05 completo sigue pendiente
+de T03 y C06-C08. No se acredita entrega final.
+
+Publish-Delivery.ps1 ejecutado en Release con exito sobre esta base:
+DLL, HTML, CSS y JavaScript presentes. Test-Delivery.ps1 tiene sintaxis
+PowerShell validada, pero su ejecucion completa no se verifico: la revision
+automatica rechazo el comando de arranque del DLL con aprovisionamiento demo,
+con mensaje "blocked by policy" sin razon adicional.
+
+Uso para el entorno de entrega, con cuenta ADMIN o RECEPTION ya aprovisionada:
+
+    ./scripts/Publish-Delivery.ps1 -OutputDirectory C:/hotel-delivery-nuevo
+    # Configurar externamente ConnectionStrings__DefaultConnection,
+    # DELIVERY_USERNAME y DELIVERY_PASSWORD, sin guardarlos en el repositorio.
+    ./scripts/Test-Delivery.ps1 -PublishedDirectory C:/hotel-delivery-nuevo
+
+La prueba arranca Production sin launchSettings, comprueba estaticos,
+401/404, login, /me, lectura de habitaciones y logout. Detiene su proceso
+y restaura entorno/URLs al salir. Usar un puerto libre (5086 por defecto).
+No crea base ni cuentas; aplicar 001, 002, 003 en orden antes de usarla.
+Production no ejecuta DemoAccountSeeder. Para una demo local aislada se puede
+aprovisionar primero en Development con DemoAccounts__Password externo,
+detener ese proceso y quitar la variable antes de arrancar Production.
+El seeder no cambia contrasenas de cuentas existentes.
+
+El login real con hash, cookie y PostgreSQL esta verificado en la rama
+feature/r05-ciclo-http: commit 7586d41, suite 45/45 sin omisiones.
+Esto no verifica login del DLL publicado, HTTPS, proxy, claves persistentes,
+reinicios ni una URL externa. Coordinar esos puntos antes de cerrar R06.
