@@ -189,3 +189,168 @@ body {
 @media (prefers-reduced-motion: reduce) {
     .loading { animation: none; background-size: 100% 100%; }
 }
+
+/* ---- Y02: filtros, tabla, paginación y detalle ---- */
+.filters {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+}
+
+.field { display: flex; flex-direction: column; gap: 0.25rem; }
+.field label { font-size: 0.85rem; color: var(--muted); }
+
+.field input,
+.field select {
+    min-width: 8rem;
+    padding: 0.45rem 0.6rem;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: var(--bg);
+    color: var(--text);
+    font: inherit;
+}
+
+.filters-actions { display: flex; gap: 0.5rem; }
+
+.table-wrap { overflow-x: auto; }
+
+table { width: 100%; border-collapse: collapse; }
+
+th, td {
+    padding: 0.55rem 0.7rem;
+    text-align: left;
+    border-bottom: 1px solid var(--border);
+}
+
+th { font-size: 0.85rem; color: var(--muted); font-weight: 600; }
+
+td a { color: var(--primary); }
+
+.pagination {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    margin-top: 1rem;
+}
+
+.details {
+    display: grid;
+    grid-template-columns: max-content 1fr;
+    gap: 0.5rem 1.5rem;
+    margin: 0 0 1rem;
+}
+
+.details dt { color: var(--muted); }
+.details dd { margin: 0; }
+
+a.btn { display: inline-block; text-decoration: none; }
+
+/* ---- Y03: encabezado de tarjeta y formulario ---- */
+.card-header {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    margin-bottom: 0.75rem;
+}
+
+.card-header h1 { margin: 0; }
+
+.form-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
+    gap: 1rem;
+}
+
+.form-grid .field input,
+.form-grid .field select { width: 100%; }
+
+.form-actions {
+    grid-column: 1 / -1;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.field small { font-size: 0.8rem; }
+
+/* ---- Y05: reservas ---- */
+.step-title { margin: 0 0 0.75rem; font-size: 1.1rem; }
+
+.choice-list { display: grid; gap: 0.5rem; margin-top: 0.5rem; }
+
+.choice {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.55rem 0.75rem;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    cursor: pointer;
+}
+
+.choice:has(input:checked) { border-color: var(--primary); background: var(--info-bg); }
+
+.summary {
+    margin: 1rem 0 0.5rem;
+    padding: 0.75rem 1rem;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+}
+
+.summary .details { margin: 0; }
+
+.status {
+    display: inline-block;
+    padding: 0.1rem 0.6rem;
+    border-radius: 999px;
+    border: 1px solid var(--border);
+    font-size: 0.8rem;
+    white-space: nowrap;
+}
+
+.status.CONFIRMED, .status.COMPLETED { background: var(--success-bg); color: var(--success-text); }
+.status.PENDING, .status.CHECKED_IN { background: var(--info-bg); color: var(--info-text); }
+.status.CANCELLED, .status.NO_SHOW { background: var(--error-bg); color: var(--error-text); }
+
+.btn.danger { background: var(--error-text); border-color: var(--error-text); color: var(--bg); }
+
+.inline-form {
+    display: grid;
+    gap: 0.75rem;
+    margin-top: 1rem;
+    padding: 1rem;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+}
+
+.field textarea {
+    width: 100%;
+    padding: 0.45rem 0.6rem;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: var(--bg);
+    color: var(--text);
+    font: inherit;
+    resize: vertical;
+}
+
+/* ---- Y07: sesión e inicio de sesión ---- */
+.session {
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.login-card { max-width: 24rem; margin: 2rem auto; }
+
+.login-form { display: grid; gap: 1rem; }
+
+.login-form .field input { width: 100%; }

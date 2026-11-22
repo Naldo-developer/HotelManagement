@@ -1,3 +1,5 @@
+// Cliente central de la API. Todas las rutas son relativas al mismo origen (/api/...).
+
 const loadingListeners = new Set();
 let pendingRequests = 0;
 
@@ -102,7 +104,8 @@ async function request(method, path, { query, body, signal } = {}) {
 
         if (!response.ok) {
             const problem = await readProblem(response);
-            if (response.status === 401) {
+            // Un 401 del propio login o de /api/auth/me es normal y lo maneja su pantalla.
+            if (response.status === 401 && !path.startsWith('/api/auth/')) {
                 window.dispatchEvent(new CustomEvent('api:unauthorized'));
             }
             if (response.status === 403) {
@@ -125,5 +128,6 @@ export const api = {
     get: (path, query, signal) => request('GET', path, { query, signal }),
     post: (path, body) => request('POST', path, { body }),
     put: (path, body) => request('PUT', path, { body }),
+    patch: (path, body) => request('PATCH', path, { body }),
     delete: (path) => request('DELETE', path),
 };
