@@ -58,3 +58,16 @@ No se modificaron secretos ni appsettings.Development.json.
   en el nuevo test; corregido usando GuestDto.Id. Segunda ejecucion tuvo
   timeouts de infraestructura incluso en clases existentes. La ejecucion
   final sin paralelismo entre clases paso completa.
+
+## Continuacion — 22/11/2026
+
+Fetch y GitHub REST confirman main 28cfee6 sin novedades y PR #26 abierto.
+T03, C06, C07, C08 y Y08 no estan integrados.
+Se reutiliza 08fc50a y se sustituye la cookie artificial por login real:
+cuentas de DemoAccountSeeder con password aleatoria efimera, credenciales
+incorrectas 401, login valido 200 y /api/auth/me 200.
+El ciclo usa la cookie real y usuario persistido; sin endpoint test/login.
+Build: 0 errores, 0 advertencias. Suite PostgreSQL real: 45/45, 0 omitidas,
+sin paralelismo entre clases (Command Timeout=120; Timeout=60).
+Esta evidencia sustituye la limitacion anterior de login no verificado.
+Consumos, pagos, saldo y check-out siguen pendientes de C06-C08 y T03.

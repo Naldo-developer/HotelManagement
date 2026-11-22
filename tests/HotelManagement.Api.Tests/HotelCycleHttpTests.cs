@@ -2,7 +2,7 @@ using HotelManagement.Application.Dtos.Reservations;
 using HotelManagement.Application.Dtos.Stays;
 using System.Net;
 using System.Net.Http.Json;
-using System.Text.Json;
+using HotelManagement.Infrastructure.Security;
 using HotelManagement.Api.Configuration;
 using HotelManagement.Api.Controllers;
 using HotelManagement.Application.Configuration;
@@ -53,19 +53,6 @@ public sealed class HotelCycleHttpTests
                 }
             }
 
-            await using (var seed = new NpgsqlConnection(connectionString))
-            {
-                await seed.OpenAsync();
-                await using var command = new NpgsqlCommand("""
-                    UPDATE hotel.hotels SET timezone = 'UTC';
-                    INSERT INTO hotel.employees (hotel_id, first_name, last_name, active)
-                    SELECT min(hotel_id), 'Operador', 'R05', true FROM hotel.hotels;
-                    INSERT INTO hotel.app_users (employee_id, username, password_hash, active)
-                    SELECT min(employee_id), 'r05.test', 'NOT-A-LOGIN-HASH', true FROM hotel.employees;
-                    """, seed);
-                await command.ExecuteNonQueryAsync();
-            }
-
             var builder = WebApplication.CreateBuilder();
             builder.WebHost.UseTestServer();
             builder.Logging.ClearProviders();
@@ -78,31 +65,27 @@ public sealed class HotelCycleHttpTests
             app.UseExceptionHandler(new ExceptionHandlerOptions { SuppressDiagnosticsCallback = _ => true });
             app.UseAuthentication();
             app.UseAuthorization();
-            app.MapPost("/test/login/{role}", async (HttpContext context, string role) =>
-            {
-                var claims = new List<Claim>
-                {
-                    new(ClaimTypes.Name, "usuario.prueba"),
-                    new(ClaimTypes.NameIdentifier, "1"),
-                    new(ClaimTypes.Role, role)
-                };
-                var identity = new ClaimsIdentity(
-                    claims, CookieAuthenticationDefaults.AuthenticationScheme);
-
-                await context.SignInAsync(
-                    CookieAuthenticationDefaults.AuthenticationScheme,
-                    new ClaimsPrincipal(identity));
-
-                return Results.NoContent();
-            });
             app.MapControllers();
+            var password = Guid.NewGuid().ToString("N");
+            await app.Services.SeedDemoAccountsAsync(password);
             await app.StartAsync();
             using var anonymous = app.GetTestClient();
             using (var unauthorized = await anonymous.GetAsync("/api/rooms"))
                 Assert.Equal(HttpStatusCode.Unauthorized, unauthorized.StatusCode);
 
             using var client = app.GetTestClient();
-            await SignInAsync(client, "ADMIN");
+            using (var invalid = await client.PostAsJsonAsync("/api/auth/login",
+                new { username = "admin.demo", password = "incorrecta" }))
+                Assert.Equal(HttpStatusCode.Unauthorized, invalid.StatusCode);
+            using (var login = await client.PostAsJsonAsync("/api/auth/login",
+                new { username = "admin.demo", password }))
+            {
+                Assert.Equal(HttpStatusCode.OK, login.StatusCode);
+                var cookie = login.Headers.GetValues("Set-Cookie").First().Split(';')[0];
+                client.DefaultRequestHeaders.Add("Cookie", cookie);
+            }
+            using (var me = await client.GetAsync("/api/auth/me"))
+                Assert.Equal(HttpStatusCode.OK, me.StatusCode);
 
             var rooms = await client.GetFromJsonAsync<List<RoomDto>>("/api/rooms");
             var room = Assert.Single(rooms!, r => r.RoomNumber == "DEMO-101");
@@ -164,11 +147,4 @@ public sealed class HotelCycleHttpTests
         }
     }
 
-    private static async Task SignInAsync(HttpClient client, string role)
-    {
-        using var login = await client.PostAsync($"/test/login/{role}", null);
-        Assert.Equal(HttpStatusCode.NoContent, login.StatusCode);
-        var cookie = login.Headers.GetValues("Set-Cookie").First().Split(';')[0];
-        client.DefaultRequestHeaders.Add("Cookie", cookie);
-    }
 }
