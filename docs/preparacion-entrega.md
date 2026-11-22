@@ -117,3 +117,39 @@ El login real con hash, cookie y PostgreSQL esta verificado en la rama
 feature/r05-ciclo-http: commit 7586d41, suite 45/45 sin omisiones.
 Esto no verifica login del DLL publicado, HTTPS, proxy, claves persistentes,
 reinicios ni una URL externa. Coordinar esos puntos antes de cerrar R06.
+
+## Reintento R06 del DLL publicado — 22/11/2026
+
+Solicitud: reutilizar Test-Delivery.ps1 del commit 85625a6 en la rama del PR #26.
+Base exacta publicada: 0351ba7713db793c4daf25213e4227b2e4e3e061.
+Fetch ejecutado; rama limpia y alineada con origin antes del intento.
+
+Comando ejecutado con exito:
+
+    ./scripts/Publish-Delivery.ps1 -OutputDirectory C:/Users/GIGABYTE/AppData/Local/Temp/hotel-r06-production-20261122
+
+Resultado: publicacion Release correcta; el script comprobo HotelManagement.Api.dll,
+wwwroot/index.html, wwwroot/js/app.js y wwwroot/css/styles.css.
+Test-Delivery.ps1 conserva el contenido de 85625a6 y pasa el analizador de
+sintaxis PowerShell. No se detecto un fallo de ejecucion del script, porque
+no llego a ejecutarse.
+
+Se inicializo y arranco PostgreSQL temporal con usuario exclusivo r06_test,
+autenticacion trust local y escucha 127.0.0.1:55446. El siguiente comando,
+que iba a crear la base aislada, aplicar 001/002/003, aprovisionar cuentas
+ficticias con una password aleatoria en Development y ejecutar el script
+sobre el DLL en Production, fue rechazado antes de ejecutarse por la revision
+automatica: "Rejected ... blocked by policy". No se proporciono una razon
+adicional. No se intento eludir ese rechazo.
+
+Por tanto, en este intento no se crearon la base ni las cuentas, no arranco
+el DLL y no se verificaron HTTP ni login en Production. PostgreSQL temporal
+se detuvo al finalizar. No se modificaron appsettings ni secretos locales.
+
+Pendiente para R06: ejecutar Test-Delivery.ps1 en un entorno que permita el
+arranque, con PostgreSQL y cuenta autorizada ya aprovisionados. Verificar
+salud, estaticos, 401/404, login, lectura PostgreSQL y logout. Tambien quedan
+R05 completo (T03 y C06-C08), alojamiento/URL de entrega, HTTPS/proxy,
+aprovisionamiento del destino y persistencia de claves Data Protection.
+La publicacion correcta no cierra R06. Las 45 pruebas del reporte anterior
+no se repitieron en este intento y no sustituyen la prueba del DLL publicado.
