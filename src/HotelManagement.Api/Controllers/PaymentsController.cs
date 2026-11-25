@@ -47,4 +47,15 @@ public class PaymentsController(ISender sender) : ControllerBase
 
         return Ok(payments);
     }
+    [HttpGet("summary/by-reservation/{reservationId:long}")]
+    public async Task<ActionResult<PaymentSummaryDto>> GetSummary(
+        long reservationId,
+        CancellationToken cancellationToken)
+    {
+        var summary = await sender.Send(
+            new GetPaymentSummaryQuery(reservationId),
+            cancellationToken);
+
+        return Ok(summary);
+    }
 }

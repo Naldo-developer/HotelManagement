@@ -41,6 +41,26 @@ public class PaymentRepository(HotelManagementDbContext context) : IPaymentRepos
             throw new BusinessValidationException(
                 "El usuario que registra el pago no está activo.");
         }
+        var normalizedReference = string.IsNullOrWhiteSpace(reference)
+            ? null
+            : reference.Trim();
+
+        if (normalizedReference is not null)
+        {
+            var existingPayment = await context.Payments
+                .AsNoTracking()
+                .SingleOrDefaultAsync(
+                    payment =>
+                        payment.ReservationId == reservationId &&
+                        payment.TransactionType == "PAYMENT" &&
+                        payment.Reference == normalizedReference,
+                    cancellationToken);
+
+            if (existingPayment is not null)
+            {
+                return existingPayment;
+            }
+        }
 
         var payment = new Payment
         {
@@ -49,9 +69,7 @@ public class PaymentRepository(HotelManagementDbContext context) : IPaymentRepos
             Amount = amount,
             PaymentMethod = paymentMethod,
             Status = "COMPLETED",
-            Reference = string.IsNullOrWhiteSpace(reference)
-                ? null
-                : reference.Trim(),
+            Reference = normalizedReference,
             PaidAt = DateTime.UtcNow,
             RecordedByUserId = userId,
             Notes = string.IsNullOrWhiteSpace(notes)
