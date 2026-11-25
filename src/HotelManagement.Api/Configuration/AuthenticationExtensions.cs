@@ -37,6 +37,8 @@ public static class AuthenticationExtensions
 
             options.AddPolicy(AppPolicies.Configuration, policy =>
                 policy.RequireRole(AppRoles.Admin));
+            options.AddPolicy(AppPolicies.Financial, policy =>
+                policy.RequireRole(AppRoles.Cashier, AppRoles.Admin));
         });
         return services;
     }

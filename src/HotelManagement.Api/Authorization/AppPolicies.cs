@@ -12,4 +12,5 @@ public static class AppPolicies
 {
     public const string Operations = "Operations";
     public const string Configuration = "Configuration";
+    public const string Financial = "Financial";
 }
