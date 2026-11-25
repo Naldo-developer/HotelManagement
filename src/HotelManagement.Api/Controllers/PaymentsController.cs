@@ -1,0 +1,50 @@
+﻿using System.Security.Claims;
+using HotelManagement.Api.Authorization;
+using HotelManagement.Application.Dtos.Payments;
+using HotelManagement.Application.UseCases.Payments.Commands;
+using HotelManagement.Application.UseCases.Payments.Queries;
+using MediatR;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+
+namespace HotelManagement.Api.Controllers;
+
+[ApiController]
+[Route("api/payments")]
+[Authorize(Policy = AppPolicies.Financial)]
+public class PaymentsController(ISender sender) : ControllerBase
+{
+    [HttpPost]
+    public async Task<ActionResult<PaymentDto>> Create(
+        [FromBody] CreatePaymentDto input,
+        CancellationToken cancellationToken)
+    {
+        var claim = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+        if (!long.TryParse(claim, out var userId))
+        {
+            return Unauthorized();
+        }
+
+        var payment = await sender.Send(
+            new CreatePaymentCommand(input, userId),
+            cancellationToken);
+
+        return CreatedAtAction(
+            nameof(GetByReservation),
+            new { reservationId = input.ReservationId },
+            payment);
+    }
+
+    [HttpGet("by-reservation/{reservationId:long}")]
+    public async Task<ActionResult<List<PaymentDto>>> GetByReservation(
+        long reservationId,
+        CancellationToken cancellationToken)
+    {
+        var payments = await sender.Send(
+            new GetPaymentsByReservationQuery(reservationId),
+            cancellationToken);
+
+        return Ok(payments);
+    }
+}

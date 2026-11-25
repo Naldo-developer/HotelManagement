@@ -28,6 +28,7 @@ public static class InfrastructureServicesExtensions
         services.AddScoped<IStayRepository, StayRepository>();
         services.AddScoped<IServiceRepository, ServiceRepository>();
         services.AddScoped<IConsumptionRepository, ConsumptionRepository>();
+        services.AddScoped<IPaymentRepository, PaymentRepository>();
 
         return services;
     }
