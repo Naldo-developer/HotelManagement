@@ -177,45 +177,71 @@ function renderRoute() {
     view.render(container, param, action);
 }
 
+const SVG_NS = 'http://www.w3.org/2000/svg';
+
+const TILES = [
+    ['reservas', 'Reservas', 'Busca disponibilidad, crea una reserva o cancela una existente.',
+        ['M8 2v4', 'M16 2v4', 'M3 10h18', 'M5 4h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z']],
+    ['huespedes', 'Huéspedes', 'Registra a un huésped nuevo o busca sus datos.',
+        ['M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2', 'M16 7a4 4 0 1 1-8 0 4 4 0 0 1 8 0z']],
+    ['habitaciones', 'Habitaciones', 'Consulta cada habitación, su tipo y su estado.',
+        ['M2 20v-8a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v8', 'M4 10V6a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v4', 'M2 18h20']],
+];
+
+function icon(paths) {
+    const svg = document.createElementNS(SVG_NS, 'svg');
+    svg.setAttribute('viewBox', '0 0 24 24');
+    svg.setAttribute('width', '24');
+    svg.setAttribute('height', '24');
+    svg.setAttribute('fill', 'none');
+    svg.setAttribute('stroke', 'currentColor');
+    svg.setAttribute('stroke-width', '1.8');
+    svg.setAttribute('stroke-linecap', 'round');
+    svg.setAttribute('stroke-linejoin', 'round');
+    svg.setAttribute('aria-hidden', 'true');
+    paths.forEach((d) => {
+        const path = document.createElementNS(SVG_NS, 'path');
+        path.setAttribute('d', d);
+        svg.append(path);
+    });
+    return svg;
+}
+
+function greeting() {
+    const hour = new Date().getHours();
+    if (hour < 12) {
+        return 'Buenos días';
+    }
+    return hour < 19 ? 'Buenas tardes' : 'Buenas noches';
+}
+
 function renderHome(container) {
-    const card = document.createElement('section');
-    card.className = 'card';
+    const user = getUser();
+    const name = (user?.fullName || user?.username || '').split(' ')[0];
 
-    const heading = document.createElement('h1');
-    heading.textContent = 'Sistema de gestión hotelera';
+    const hero = el('section', { class: 'hero' },
+        el('h1', { text: name ? `${greeting()}, ${name}` : greeting() }),
+        el('p', { text: '¿Qué necesitas hacer hoy?' }));
 
-    const text = document.createElement('p');
-    text.className = 'muted';
-    text.textContent = 'Usa el menú para navegar. Puedes comprobar la conexión con la API desde aquí.';
+    const tiles = el('div', { class: 'tiles' },
+        ...TILES
+            .filter(([key]) => hasAnyRole(user, views[key].roles))
+            .map(([key, title, text, paths]) => el('a', { href: `#${key}`, class: 'tile' },
+                el('span', { class: 'tile-icon' }, icon(paths)),
+                el('h2', { text: title }),
+                el('p', { text }))));
 
-    const output = document.createElement('pre');
-    output.className = 'output';
-    output.textContent = 'Sin consultas todavía.';
-
-    const actions = document.createElement('div');
-    actions.className = 'actions';
-
-    const healthButton = document.createElement('button');
-    healthButton.type = 'button';
-    healthButton.className = 'btn';
-    healthButton.textContent = 'Probar conexión';
+    const healthButton = el('button', { type: 'button', class: 'btn secondary', text: 'Comprobar conexión' });
     healthButton.addEventListener('click', () => run(healthButton, async () => {
-        const data = await api.get('/api/health');
-        output.textContent = JSON.stringify(data, null, 2);
-        showMessage('La API respondió correctamente.', 'success');
+        await api.get('/api/health');
+        showMessage('La conexión con el servidor funciona correctamente.', 'success');
     }));
 
-    const errorButton = document.createElement('button');
-    errorButton.type = 'button';
-    errorButton.className = 'btn secondary';
-    errorButton.textContent = 'Probar error 404';
-    errorButton.addEventListener('click', () => run(errorButton, async () => {
-        await api.get('/api/ruta-que-no-existe');
-    }));
+    const status = el('section', { class: 'card status-card' },
+        el('h2', { text: 'Estado del sistema' }),
+        healthButton);
 
-    actions.append(healthButton, errorButton);
-    card.append(heading, text, actions, output);
-    container.append(card);
+    container.append(hero, tiles, status);
 }
 
 // Ejecuta una acción, evita doble clic y muestra el error de la API de forma legible.
