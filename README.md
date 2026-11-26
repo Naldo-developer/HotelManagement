@@ -3,11 +3,13 @@
 API .NET 10, PostgreSQL e interfaz estática del mismo origen. Capas Api,
 Application, Domain e Infrastructure; CQRS con MediatR.
 
-Verificación de Ronaldo del 26/11/2026: R05 implementado y probado; R06 y R07
-parciales. [Resultados completos](docs/verificacion-20261126.md).
-Main revisado: bd3b48b. Código del ciclo probado: 7cf7807.
-Versión Release publicada: d6690a3c2ec4d5d96ae59af777cb55eedfea9edc.
-No se acredita una entrega pública ni aceptación Y08.
+Verificación de Ronaldo del 26/11/2026: R05 implementado y probado; **R06
+completado para entrega local en esta PC**; R07 parcial.
+[Resultados R05](docs/verificacion-20261126.md) y
+[evidencia R06 local](docs/r06-entrega-local.md).
+Main revisado: 51664bc. Código del ciclo probado: 7cf7807.
+Versión Release probada: f15c734a7177579722c7bb6af0018bfa0872553a.
+URL local verificada: **http://127.0.0.1:5086**. No se acredita aceptación Y08.
 
 ## Preparar y ejecutar
 
@@ -33,8 +35,8 @@ dotnet run --project src/HotelManagement.Api --launch-profile http
 
 El perfil http configura Development en http://localhost:5075. Web `/`, salud
 `/api/health`, Swagger `/swagger` solo en Development. Salud comprueba HTTP,
-no PostgreSQL. Estas rutas proceden de configuración; el arranque de esta sesión
-no quedó verificado. **URL de entrega: pendiente de proporcionar y verificar.**
+no PostgreSQL. La entrega Release se ejecuta por separado en
+**http://127.0.0.1:5086**, con Production y sin launchSettings.
 
 ## Pruebas ejecutadas
 
@@ -77,7 +79,7 @@ siguen pendientes del equipo. No se atribuyen esas tareas a Ronaldo.
 Comando probado desde la rama del PR #26, con destino nuevo:
 
 ```powershell
-./scripts/Publish-Delivery.ps1 -OutputDirectory "$env:TEMP/hotel-release-20261126"
+./scripts/Publish-Delivery.ps1 -OutputDirectory "$env:LOCALAPPDATA/HotelManagement/Delivery/f15c734a"
 ```
 
 Release correcto: DLL, HTML, CSS y JavaScript presentes. Para el destino usar
@@ -88,17 +90,33 @@ ASPNETCORE_ENVIRONMENT=Production y ASPNETCORE_URLS. Desde la carpeta publicada:
 dotnet HotelManagement.Api.dll
 ```
 
-Comprobación preparada (pendiente de ejecución), con DELIVERY_USERNAME y
-DELIVERY_PASSWORD externos y una cuenta ya aprovisionada:
+Comprobación ejecutada con éxito, con ConnectionStrings__DefaultConnection,
+DELIVERY_USERNAME y DELIVERY_PASSWORD externos y una cuenta ya aprovisionada:
 
 ```powershell
-./scripts/Test-Delivery.ps1 -PublishedDirectory "$env:TEMP/hotel-release-20261126"
+./scripts/Test-Delivery.ps1 -PublishedDirectory "$env:LOCALAPPDATA/HotelManagement/Delivery/f15c734a" -RequireDemoData
 ```
 
-La revisión automática bloqueó el comando de aprovisionamiento y arranque antes
-de ejecutarlo (`blocked by policy`, sin razón adicional). No se verificaron
-Production, web publicada, login ni URL de entrega. Falta completar esos pasos
-y comprobar HTTPS/proxy y persistencia de claves Data Protection en el destino.
+Resultados: Production, web y recursos Aurora, rutas 401/404, login válido e
+inválido, PostgreSQL con datos ficticios, sesión tras reinicio y logout correctos.
+Sin conexión configurada el arranque falla con el mensaje esperado. Estos
+resultados sustituyen el bloqueo de ejecución registrado anteriormente.
+
+La carpeta anterior ya está publicada; para publicar de nuevo, usar otra vacía.
+El puerto de prueba debe estar libre. Para iniciar la entrega local existente:
+
+```powershell
+./scripts/Start-LocalDelivery.ps1 -PublishedDirectory "$env:LOCALAPPDATA/HotelManagement/Delivery/f15c734a"
+```
+
+El lanzador usa la conexión del entorno o la conexión de los User Secrets de
+esta PC, la pasa por entorno y fija Production con escucha solo en loopback.
+No copia secretos ni crea cuentas. Las claves Data Protection permanecen en el
+perfil Windows; el reinicio conservando sesión fue comprobado. Detener con
+Ctrl+C. No iniciar otra instancia si la URL ya responde.
+
+La modalidad acordada es local. Otro destino o acceso por red requiere verificar
+HTTPS, proxy y persistencia de claves en ese entorno.
 
 ## Autores y estado de revisión
 
@@ -112,9 +130,9 @@ una revisión de aceptación):
 | charly calderon / charlycalderon-oss | C06 [#37](https://github.com/Naldo-developer/HotelManagement/pull/37), C07 [#38](https://github.com/Naldo-developer/HotelManagement/pull/38), C08 [#39](https://github.com/Naldo-developer/HotelManagement/pull/39) |
 | Starqx-ym (Yadhira) | Y07 [#33](https://github.com/Naldo-developer/HotelManagement/pull/33) y mejora visual #36 |
 
-PR #26 confirmado abierto el 26/11/2026; se reutiliza su rama y preparación.
+PR #26 integrado en main (51664bc); se reutilizan sus scripts de preparación.
 R05 ya cuenta con sus dependencias integradas y suite completa aprobada.
-R06 queda parcial por arranque y entrega pendientes. R07 queda parcial por R06,
-URL verificada, integración/aceptación Y08 y reproducción por otro integrante.
+R06 queda verificado para la entrega local acordada. R07 queda parcial por
+integración/aceptación Y08 y reproducción por otro integrante.
 No se encontró evidencia versionada de esa reproducción ni un merge Y08.
 Registrar integrante, fecha, hash, comandos y resultados cuando ocurra.
