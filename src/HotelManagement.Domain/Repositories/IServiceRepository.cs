@@ -11,4 +11,11 @@ public interface IServiceRepository
     Task<Service?> GetByIdAsync(
         long serviceId,
         CancellationToken cancellationToken);
+    Task<Service> CreateAsync(
+        Service service,
+        CancellationToken cancellationToken);
+
+    Task<Service> UpdateAsync(
+        Service service,
+        CancellationToken cancellationToken);
 }
