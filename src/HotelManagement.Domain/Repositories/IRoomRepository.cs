@@ -37,4 +37,9 @@ public interface IRoomRepository
     Task<Room> CreateAsync(Room room, CancellationToken cancellationToken);
     
     Task UpdateAsync(Room room, CancellationToken cancellationToken);
+    
+    Task<Room> UpdateOperationalStatusAsync(
+        long roomId,
+        string operationalStatus,
+        CancellationToken cancellationToken);
 }

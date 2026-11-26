@@ -261,4 +261,131 @@ public class StayRepository(HotelManagementDbContext context)
 
         return stay;
     }
+        public async Task<Stay> CheckOutAsync(
+            long stayId,
+            long userId,
+            string? notes,
+            CancellationToken cancellationToken)
+        {
+            await using var transaction =
+                await context.Database.BeginTransactionAsync(
+                    IsolationLevel.ReadCommitted,
+                    cancellationToken);
+
+            await context.Database.ExecuteSqlRawAsync(
+                "SET LOCAL search_path TO hotel, public",
+                cancellationToken);
+
+            var stays = await context.Stays
+                .FromSqlInterpolated($"""
+                    SELECT *
+                    FROM hotel.stays
+                    WHERE stay_id = {stayId}
+                    FOR UPDATE
+                    """)
+                .ToListAsync(cancellationToken);
+
+            var stay = stays.SingleOrDefault();
+
+            if (stay is null)
+            {
+                throw new ResourceNotFoundException(
+                    "La estadía indicada no existe.");
+            }
+
+            if (stay.Status != "ACTIVE" || stay.CheckOutAt is not null)
+            {
+                throw new BusinessConflictException(
+                    "Solo se pueden cerrar estadías activas.");
+            }
+
+            var reservation = await context.Reservations
+                .FromSqlInterpolated($"""
+                    SELECT *
+                    FROM hotel.reservations
+                    WHERE reservation_id = {stay.ReservationId}
+                    FOR UPDATE
+                    """)
+                .SingleOrDefaultAsync(cancellationToken);
+
+            if (reservation is null)
+            {
+                throw new ResourceNotFoundException(
+                    "La reserva asociada no existe.");
+            }
+
+            var user = await context.AppUsers
+                .Include(appUser => appUser.Employee)
+                .AsNoTracking()
+                .SingleOrDefaultAsync(
+                    appUser => appUser.UserId == userId,
+                    cancellationToken);
+
+            if (user is null ||
+                !user.Active ||
+                user.Employee is null ||
+                !user.Employee.Active)
+            {
+                throw new BusinessValidationException(
+                    "El usuario que realiza el check-out no está activo.");
+            }
+
+            var nights =
+                reservation.CheckOutDate.DayNumber -
+                reservation.CheckInDate.DayNumber;
+
+            var accommodationTotal = nights * reservation.NightlyRate;
+
+            var consumptionTotal = await context.Consumptions
+                .Where(consumption => consumption.StayId == stayId)
+                .Select(consumption =>
+                    consumption.Subtotal ??
+                    consumption.Quantity * consumption.UnitPrice)
+                .SumAsync(cancellationToken);
+
+            var payments = await context.Payments
+                .AsNoTracking()
+                .Where(payment =>
+                    payment.ReservationId == reservation.ReservationId &&
+                    payment.Status == "COMPLETED")
+                .Select(payment => new
+                {
+                    payment.TransactionType,
+                    payment.Amount
+                })
+                .ToListAsync(cancellationToken);
+
+            var totalPaid = payments.Sum(payment =>
+                payment.TransactionType == "REFUND"
+                    ? -payment.Amount
+                    : payment.Amount);
+
+            var totalDue = accommodationTotal + consumptionTotal;
+            var balanceDue = totalDue - totalPaid;
+
+            if (balanceDue > 0.01m)
+            {
+                throw new BusinessConflictException(
+                    $"No se puede cerrar la estadía. " +
+                    $"Saldo pendiente: {balanceDue:0.00}.");
+            }
+
+            stay.Status = "COMPLETED";
+            stay.CheckOutAt = DateTime.UtcNow;
+            stay.CheckOutByUserId = userId;
+
+            if (!string.IsNullOrWhiteSpace(notes))
+            {
+                stay.Notes = string.IsNullOrWhiteSpace(stay.Notes)
+                    ? $"Check-out: {notes.Trim()}"
+                    : $"{stay.Notes}\nCheck-out: {notes.Trim()}";
+            }
+
+            reservation.Status = "COMPLETED";
+
+            await context.SaveChangesAsync(cancellationToken);
+            await transaction.CommitAsync(cancellationToken);
+
+            return stay;
+        }
 }
