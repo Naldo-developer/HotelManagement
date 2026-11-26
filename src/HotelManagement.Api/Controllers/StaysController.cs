@@ -65,4 +65,23 @@ public class StaysController(ISender sender) : ControllerBase
 
         return Ok(result);
     }
+    [HttpPost("check-out")]
+    [Authorize(Policy = AppPolicies.Operations)]
+    public async Task<ActionResult<StayDto>> CheckOut(
+        [FromBody] CheckOutDto input,
+        CancellationToken cancellationToken)
+    {
+        var claim = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+        if (!long.TryParse(claim, out var userId))
+        {
+            return Unauthorized();
+        }
+
+        var stay = await sender.Send(
+            new CheckOutCommand(input, userId),
+            cancellationToken);
+
+        return Ok(stay);
+    }
 }

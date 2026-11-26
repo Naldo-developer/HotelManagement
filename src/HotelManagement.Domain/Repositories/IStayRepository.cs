@@ -17,4 +17,9 @@ public interface IStayRepository
     Task<Stay?> GetByReservationIdAsync(
         long reservationId,
         CancellationToken cancellationToken);
+    Task<Stay> CheckOutAsync(
+        long stayId,
+        long userId,
+        string? notes,
+        CancellationToken cancellationToken);
 }
