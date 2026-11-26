@@ -58,4 +58,17 @@ public class RoomsController(ISender sender) : ControllerBase
 
         return Ok(room);
     }
+    
+    [Authorize(Policy = AppPolicies.Configuration)]
+    [HttpPatch("{id:long}/operational-status")]
+    public async Task<IActionResult> UpdateOperationalStatus(
+        long id,
+        [FromBody] UpdateRoomOperationalStatusDto input)
+    {
+        var room = await sender.Send(
+            new UpdateRoomOperationalStatusCommand(id, input),
+            HttpContext.RequestAborted);
+
+        return Ok(room);
+    }
 }

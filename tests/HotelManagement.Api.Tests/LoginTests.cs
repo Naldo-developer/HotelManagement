@@ -110,5 +110,43 @@ public class LoginTests
             LoginsRecorded.Add(userId);
             return Task.CompletedTask;
         }
+        public Task<List<AppUser>> GetAllAsync(
+            CancellationToken cancellationToken)
+        {
+            return Task.FromResult(Users.ToList());
+        }
+
+        public Task<AppUser?> GetByIdAsync(
+            long userId,
+            CancellationToken cancellationToken)
+        {
+            return Task.FromResult(
+                Users.FirstOrDefault(user => user.UserId == userId));
+        }
+
+        public Task<AppUser> CreateAsync(
+            AppUser user,
+            IEnumerable<string> roleCodes,
+            CancellationToken cancellationToken)
+        {
+            Users.Add(user);
+            return Task.FromResult(user);
+        }
+
+        public Task<AppUser> UpdateAsync(
+            AppUser user,
+            IEnumerable<string> roleCodes,
+            CancellationToken cancellationToken)
+        {
+            var index = Users.FindIndex(
+                item => item.UserId == user.UserId);
+
+            if (index >= 0)
+            {
+                Users[index] = user;
+            }
+
+            return Task.FromResult(user);
+        }
     }
 }

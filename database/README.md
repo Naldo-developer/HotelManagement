@@ -124,3 +124,14 @@ esquema aplicado sobre base vac?a (16 tablas y 4 roles); seed aplicado dos veces
 comparando todas las columnas e IDs de las cuatro tablas entre ejecuciones.
 Resultado: mismo conjunto de datos, sin registros duplicados, con relaciones
 hotel/tipo/habitaci?n v?lidas. El esquema inicial permanece sin cambios.
+
+## T07: corrección del trigger de mantenimiento
+
+Ejecutar `004_maintenance_trigger_search_path.sql`
+después de aplicar el script 003.
+
+Corrige el error PostgreSQL 42P01 al registrar
+mantenimientos desde la API.
+
+La actualización conserva los datos existentes
+y las reglas de integridad del esquema.

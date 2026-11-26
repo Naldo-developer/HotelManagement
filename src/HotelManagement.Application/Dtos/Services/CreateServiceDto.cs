@@ -1,0 +1,21 @@
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace HotelManagement.Application.Dtos.Services;
+
+public sealed class CreateServiceDto
+{
+    [Range(1, long.MaxValue)]
+    public long HotelId { get; set; }
+
+    [Required, MaxLength(100)]
+    public string Name { get; set; } = string.Empty;
+
+    [MaxLength(1000)]
+    public string? Description { get; set; }
+
+    [Range(typeof(decimal), "0", "9999999999")]
+    public decimal DefaultPrice { get; set; }
+
+    [Required, MaxLength(30)]
+    public string Unit { get; set; } = string.Empty;
+}
