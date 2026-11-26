@@ -13,14 +13,14 @@ export function renderLogin(container, onSuccess) {
 
     container.append(el('div', { class: 'login-layout' },
         el('section', { class: 'login-story' },
-            el('span', { class: 'eyebrow', text: 'HOSPITALIDAD, SIN COMPLICACIONES' }),
-            el('h1', { text: 'El cuidado está en los detalles.' }),
-            el('p', { text: 'Un espacio para gestionar tu hotel y dedicarte a lo que más importa: recibir bien.' }),
-            el('div', { class: 'hero-art', 'aria-hidden': 'true' }, el('div', { class: 'art-sun' }), el('div', { class: 'art-arch' }), el('div', { class: 'art-building' }))),
+            el('span', { class: 'eyebrow', text: 'AURORA HOTEL / LIMA' }),
+            el('h1', { text: 'Una estancia. Mil detalles.' }),
+            el('p', { text: 'La hospitalidad empieza con nuestro equipo.' }),
+            el('figure', { class: 'brand-visual' }, el('img', { src: 'images/aurora-lobby.png', alt: 'Concepto del lobby de Aurora Hotel.', width: 1536, height: 1024, decoding: 'async' }))),
         el('section', { class: 'card login-card' },
-            el('span', { class: 'eyebrow', text: 'TU ESPACIO DE TRABAJO' }),
-            el('h2', { text: 'Qué gusto verte.' }),
-            el('p', { class: 'muted', text: 'Inicia sesión para continuar con tu día.' }), form,
+            el('span', { class: 'eyebrow', text: 'ACCESO DEL EQUIPO' }),
+            el('h2', { text: 'Bienvenido de nuevo.' }),
+            el('p', { class: 'muted', text: 'Ingresa a tu espacio de gestión.' }), form,
             el('p', { class: 'login-note', text: 'Acceso exclusivo para el equipo del hotel.' }))));
 
     let saving = false;

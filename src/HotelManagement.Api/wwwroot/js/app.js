@@ -113,7 +113,7 @@ function showLogin() {
     renderSessionBar();
     clearMessages();
     flushQueuedMessages();
-    document.title = 'Iniciar sesión · HotelManagement';
+    document.title = 'Iniciar sesión · Aurora Hotel';
 
     renderLogin(container, (user) => {
         setUser(user);
@@ -167,7 +167,7 @@ function renderRoute() {
     flushQueuedMessages();
     renderSessionBar();
     renderNav(name);
-    document.title = `${view.title} · HotelManagement`;
+    document.title = `${view.title} · Aurora Hotel`;
     container.replaceChildren();
 
     if (!hasAnyRole(getUser(), view.roles)) {
@@ -226,13 +226,13 @@ function renderHome(container) {
 
     const hero = el('section', { class: 'hero' },
         el('div', { class: 'hero-copy' },
-            el('span', { class: 'eyebrow', text: 'CADA ESTANCIA EMPIEZA CONTIGO' }),
+            el('span', { class: 'eyebrow', text: 'BIENVENIDO A AURORA' }),
             el('h1', { text: name ? `${greeting()}, ${name}.` : `${greeting()}.` }),
-            el('p', { text: 'Grandes experiencias. Pequeños detalles. Todo tu hotel, en un solo lugar.' }),
+            el('p', { text: 'Cada llegada merece nuestra mejor versión. Prepara el día desde aquí.' }),
             el('a', { href: '#reservas/nueva', class: 'btn hero-cta', text: 'Crear una reserva ↗' })),
-        el('div', { class: 'hero-art', 'aria-hidden': 'true' },
-            el('div', { class: 'art-sun' }), el('div', { class: 'art-arch' }), el('div', { class: 'art-building' }),
-            el('span', { class: 'art-caption', text: 'EL ARTE DE RECIBIR BIEN' })));
+        el('figure', { class: 'brand-visual' },
+            el('img', { src: 'images/aurora-lobby.png', alt: 'Concepto de interior Aurora: madera, piedra y tapicería azul noche.', width: 1536, height: 1024, decoding: 'async' }),
+            el('figcaption', {}, el('span', { text: 'AURORA' }), el('span', { text: 'EL ARTE DE RECIBIR' }))));
 
     const tiles = el('div', { class: 'tiles' },
         ...TILES
@@ -249,9 +249,9 @@ function renderHome(container) {
     }));
 
     const status = el('section', { class: 'card status-card' },
-        el('div', { class: 'status-copy' }, el('span', { class: 'connection-symbol', text: '⌁', 'aria-hidden': 'true' }), el('div', {}, el('h2', { text: 'Siempre a tu servicio' }), el('p', { class: 'muted', text: 'Comprueba la conexión con el servidor cuando lo necesites.' }))), healthButton);
+        el('div', { class: 'status-copy' }, el('span', { class: 'connection-symbol', text: '↔', 'aria-hidden': 'true' }), el('div', {}, el('h2', { text: 'Conexión con el hotel' }), el('p', { class: 'muted', text: 'Verifica la respuesta del servidor.' }))), healthButton);
 
-    const sectionHeading = el('div', { class: 'section-heading' }, el('div', {}, el('span', { class: 'eyebrow', text: 'TODO A MANO' }), el('h2', { text: 'Tu operación, sin complicaciones' })), el('span', { class: 'muted', text: '¿Por dónde empezamos?' }));
+    const sectionHeading = el('div', { class: 'section-heading' }, el('div', {}, el('span', { class: 'eyebrow', text: 'LA RECEPCIÓN' }), el('h2', { text: 'Lo que sigue en tu día' })), el('span', { class: 'muted', text: 'Selecciona un área para continuar' }));
     container.append(hero, sectionHeading, tiles, status);
 }
 
