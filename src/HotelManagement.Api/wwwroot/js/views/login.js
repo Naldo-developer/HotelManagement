@@ -11,10 +11,17 @@ export function renderLogin(container, onSuccess) {
         el('div', { class: 'field' }, el('label', { for: 'l-pass', text: 'Contraseña' }), password),
         el('div', { class: 'actions' }, submit));
 
-    container.append(el('section', { class: 'card login-card' },
-        el('h1', { text: 'Iniciar sesión' }),
-        el('p', { class: 'muted', text: 'Ingresa con tu cuenta del hotel.' }),
-        form));
+    container.append(el('div', { class: 'login-layout' },
+        el('section', { class: 'login-story' },
+            el('span', { class: 'eyebrow', text: 'AURORA HOTEL / LIMA' }),
+            el('h1', { text: 'Una estancia. Mil detalles.' }),
+            el('p', { text: 'La hospitalidad empieza con nuestro equipo.' }),
+            el('figure', { class: 'brand-visual' }, el('img', { src: 'images/aurora-lobby.png', alt: 'Concepto del lobby de Aurora Hotel.', width: 1536, height: 1024, decoding: 'async' }))),
+        el('section', { class: 'card login-card' },
+            el('span', { class: 'eyebrow', text: 'ACCESO DEL EQUIPO' }),
+            el('h2', { text: 'Bienvenido de nuevo.' }),
+            el('p', { class: 'muted', text: 'Ingresa a tu espacio de gestión.' }), form,
+            el('p', { class: 'login-note', text: 'Acceso exclusivo para el equipo del hotel.' }))));
 
     let saving = false;
 
