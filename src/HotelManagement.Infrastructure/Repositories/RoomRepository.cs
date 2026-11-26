@@ -193,6 +193,115 @@ public class RoomRepository(HotelManagementDbContext context) : IRoomRepository
 
         await transaction.CommitAsync(cancellationToken);
     }
+    
+    public async Task<Room> UpdateOperationalStatusAsync(
+        long roomId,
+        string operationalStatus,
+        CancellationToken cancellationToken)
+    {
+        if (roomId <= 0)
+        {
+            throw new BusinessValidationException(
+                "El identificador de la habitación debe ser positivo.");
+        }
+
+        if (operationalStatus != "ACTIVE" &&
+            operationalStatus != "OUT_OF_SERVICE" &&
+            operationalStatus != "INACTIVE")
+        {
+            throw new BusinessValidationException(
+                "El estado debe ser ACTIVE, OUT_OF_SERVICE o INACTIVE.");
+        }
+
+        await using var transaction =
+            await context.Database.BeginTransactionAsync(
+                IsolationLevel.ReadCommitted,
+                cancellationToken);
+
+        // T05 y C05 bloquean esta misma habitación.
+        // Las reglas se verifican después de obtener el bloqueo.
+        var rooms = await context.Rooms
+            .FromSqlInterpolated($"""
+                SELECT *
+                FROM hotel.rooms
+                WHERE room_id = {roomId}
+                FOR UPDATE
+                """)
+            .AsNoTracking()
+            .ToListAsync(cancellationToken);
+
+        var room = rooms.SingleOrDefault();
+
+        if (room is null)
+        {
+            throw new ResourceNotFoundException(
+                "La habitación no existe.");
+        }
+
+        // Repetir el estado actual no genera cambios.
+        if (room.OperationalStatus == operationalStatus)
+        {
+            await transaction.CommitAsync(cancellationToken);
+            return room;
+        }
+
+        if (operationalStatus != "ACTIVE")
+        {
+            // Una estadía abierta bloquea incluso si terminó
+            // el periodo previsto de su reserva.
+            var hasOpenStay = await context.Stays.AnyAsync(
+                stay =>
+                    stay.Reservation.RoomId == roomId &&
+                    (stay.Status == "ACTIVE" ||
+                    stay.CheckOutAt == null),
+                cancellationToken);
+
+            if (hasOpenStay)
+            {
+                throw new BusinessConflictException(
+                    "No se puede desactivar una habitación con una estadía abierta.");
+            }
+
+            var hotel = await context.Hotels
+                .AsNoTracking()
+                .SingleAsync(
+                    item => item.HotelId == room.HotelId,
+                    cancellationToken);
+
+            var timeZone = TimeZoneInfo.FindSystemTimeZoneById(
+                hotel.Timezone);
+
+            var localDate = DateOnly.FromDateTime(
+                TimeZoneInfo.ConvertTimeFromUtc(
+                    DateTime.UtcNow, timeZone));
+
+             // Incluye reservas futuras y las que siguen vigentes hoy.
+            var hasActiveReservation = await context.Reservations.AnyAsync(
+                reservation =>
+                    reservation.RoomId == roomId &&
+                    (reservation.Status == "PENDING" ||
+                    reservation.Status == "CONFIRMED" ||
+                    reservation.Status == "CHECKED_IN") &&
+                    reservation.CheckOutDate > localDate,
+                cancellationToken);
+
+            if (hasActiveReservation)
+            {
+                throw new BusinessConflictException(
+                    "No se puede desactivar una habitación con reservas activas vigentes o futuras.");
+            }
+        }
+
+        var entry = context.Rooms.Attach(room);
+
+        room.OperationalStatus = operationalStatus;
+        entry.Property(item => item.OperationalStatus).IsModified = true;
+
+        await SaveRoomChangesAsync(cancellationToken);
+        await transaction.CommitAsync(cancellationToken);
+
+        return room;
+    }
 
     private async Task SaveRoomChangesAsync(CancellationToken cancellationToken)
     {
