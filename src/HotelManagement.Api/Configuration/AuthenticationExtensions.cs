@@ -39,6 +39,14 @@ public static class AuthenticationExtensions
                 policy.RequireRole(AppRoles.Admin));
             options.AddPolicy(AppPolicies.Financial, policy =>
                 policy.RequireRole(AppRoles.Cashier, AppRoles.Admin));
+            options.AddPolicy(AppPolicies.Maintenance, policy =>
+                policy.RequireRole(AppRoles.Maintenance, AppRoles.Admin)
+                    .RequireAssertion(context =>
+                        long.TryParse(
+                            context.User.FindFirst(
+                                System.Security.Claims.ClaimTypes.NameIdentifier)?.Value,
+                            out var userId) &&
+                        userId > 0));
         });
         return services;
     }
