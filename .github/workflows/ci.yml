@@ -32,7 +32,6 @@ jobs:
           --health-timeout 5s
           --health-retries 10
     env:
-      R02_POSTGRES_ADMIN: Host=127.0.0.1;Port=${{ job.services.postgres.ports[5432] }};Database=postgres;Username=hotel_ci;Password=hotel_ci_ephemeral;Command Timeout=120;Timeout=60
       DOTNET_NOLOGO: true
       DOTNET_CLI_TELEMETRY_OPTOUT: true
     steps:
@@ -45,6 +44,8 @@ jobs:
       - name: Build Release
         run: dotnet build HotelManagement.sln --configuration Release --no-restore --warnaserror
       - name: Test against PostgreSQL
+        env:
+          R02_POSTGRES_ADMIN: Host=127.0.0.1;Port=${{ job.services.postgres.ports[5432] }};Database=postgres;Username=hotel_ci;Password=hotel_ci_ephemeral;Command Timeout=120;Timeout=60
         run: dotnet test HotelManagement.sln --configuration Release --no-build --logger "trx;LogFileName=tests.trx" --results-directory TestResults -- xUnit.ParallelizeTestCollections=false
       - name: Require executed integration tests
         shell: pwsh
