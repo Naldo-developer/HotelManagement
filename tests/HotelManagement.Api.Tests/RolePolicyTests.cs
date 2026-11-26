@@ -66,6 +66,24 @@ public class RolePolicyTests
 
         Assert.Equal(expected, response.StatusCode);
     }
+    
+    [Theory]
+    [InlineData(typeof(HotelsController), "Create")]
+    [InlineData(typeof(HotelsController), "Update")]
+    [InlineData(typeof(RoomTypesController), "Create")]
+    [InlineData(typeof(RoomTypesController), "Update")]
+    public void Catalog_writes_require_configuration_policy(
+        Type controller,
+        string action)
+    {
+        var method = controller.GetMethod(action);
+
+        Assert.NotNull(method);
+
+        Assert.Equal(
+            AppPolicies.Configuration,
+            method.GetCustomAttribute<AuthorizeAttribute>()?.Policy);
+    }
 
     [Fact]
     public void Guests_and_reservations_require_operations_policy()
