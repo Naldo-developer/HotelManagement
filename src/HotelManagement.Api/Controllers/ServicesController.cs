@@ -4,6 +4,7 @@ using HotelManagement.Application.UseCases.Services.Queries;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using HotelManagement.Application.UseCases.Services.Commands;
 
 namespace HotelManagement.Api.Controllers;
 
@@ -22,5 +23,34 @@ public class ServicesController(ISender sender) : ControllerBase
             cancellationToken);
 
         return Ok(services);
+    }
+    [HttpPost]
+    [Authorize(Policy = AppPolicies.Configuration)]
+    public async Task<ActionResult<ServiceDto>> Create(
+        [FromBody] CreateServiceDto input,
+        CancellationToken cancellationToken)
+    {
+        var service = await sender.Send(
+            new CreateServiceCommand(input),
+            cancellationToken);
+
+        return CreatedAtAction(
+            nameof(GetAll),
+            new { hotelId = input.HotelId },
+            service);
+    }
+
+    [HttpPut("{serviceId:long}")]
+    [Authorize(Policy = AppPolicies.Configuration)]
+    public async Task<ActionResult<ServiceDto>> Update(
+        long serviceId,
+        [FromBody] UpdateServiceDto input,
+        CancellationToken cancellationToken)
+    {
+        var service = await sender.Send(
+            new UpdateServiceCommand(serviceId, input),
+            cancellationToken);
+
+        return Ok(service);
     }
 }
