@@ -11,10 +11,17 @@ export function renderLogin(container, onSuccess) {
         el('div', { class: 'field' }, el('label', { for: 'l-pass', text: 'Contraseña' }), password),
         el('div', { class: 'actions' }, submit));
 
-    container.append(el('section', { class: 'card login-card' },
-        el('h1', { text: 'Iniciar sesión' }),
-        el('p', { class: 'muted', text: 'Ingresa con tu cuenta del hotel.' }),
-        form));
+    container.append(el('div', { class: 'login-layout' },
+        el('section', { class: 'login-story' },
+            el('span', { class: 'eyebrow', text: 'HOSPITALIDAD, SIN COMPLICACIONES' }),
+            el('h1', { text: 'El cuidado está en los detalles.' }),
+            el('p', { text: 'Un espacio para gestionar tu hotel y dedicarte a lo que más importa: recibir bien.' }),
+            el('div', { class: 'hero-art', 'aria-hidden': 'true' }, el('div', { class: 'art-sun' }), el('div', { class: 'art-arch' }), el('div', { class: 'art-building' }))),
+        el('section', { class: 'card login-card' },
+            el('span', { class: 'eyebrow', text: 'TU ESPACIO DE TRABAJO' }),
+            el('h2', { text: 'Qué gusto verte.' }),
+            el('p', { class: 'muted', text: 'Inicia sesión para continuar con tu día.' }), form,
+            el('p', { class: 'login-note', text: 'Acceso exclusivo para el equipo del hotel.' }))));
 
     let saving = false;
 

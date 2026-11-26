@@ -77,7 +77,8 @@ function renderNav(active) {
     Object.entries(views)
         .filter(([, view]) => hasAnyRole(getUser(), view.roles))
         .forEach(([name, view]) => {
-            const link = el('a', { href: `#${name}`, text: view.title });
+            const paths = TILES.find(([key]) => key === name)?.[3] || ['M3 3h7v7H3z', 'M14 3h7v7h-7z', 'M3 14h7v7H3z', 'M14 14h7v7h-7z'];
+            const link = el('a', { href: `#${name}` }, icon(paths), el('span', { text: view.title }));
             if (name === active) {
                 link.setAttribute('aria-current', 'page');
             }
@@ -94,16 +95,18 @@ function renderSessionBar() {
         return;
     }
 
-    const roles = user.roles.length > 0 ? ` · ${user.roles.join(', ')}` : '';
     const logoutButton = el('button', { type: 'button', class: 'btn secondary', text: 'Cerrar sesión' });
     logoutButton.addEventListener('click', onLogout);
 
-    bar.append(el('span', { class: 'muted', text: `${user.fullName || user.username}${roles}` }), logoutButton);
+    bar.append(el('span', { class: 'avatar', text: (user.fullName || user.username).slice(0, 1).toUpperCase(), 'aria-hidden': 'true' }),
+        el('div', { class: 'session-person' }, el('strong', { text: user.fullName || user.username }), el('small', { text: user.roles.join(' · ') || 'Mi cuenta' })), logoutButton);
 }
 
 // ---------------------------------------------------------------- sesión
 
 function showLogin() {
+    document.body.classList.add('is-login');
+    document.getElementById('page-label').textContent = 'Bienvenido a tu espacio';
     const container = document.getElementById('view');
     container.replaceChildren();
     document.getElementById('nav').replaceChildren();
@@ -155,6 +158,8 @@ function renderRoute() {
     }
 
     const { name, param, action } = parseRoute();
+    document.body.classList.remove('is-login');
+    document.getElementById('page-label').textContent = name === 'inicio' ? 'Vista general' : views[name].title;
     const view = views[name];
     const container = document.getElementById('view');
 
@@ -220,14 +225,20 @@ function renderHome(container) {
     const name = (user?.fullName || user?.username || '').split(' ')[0];
 
     const hero = el('section', { class: 'hero' },
-        el('h1', { text: name ? `${greeting()}, ${name}` : greeting() }),
-        el('p', { text: '¿Qué necesitas hacer hoy?' }));
+        el('div', { class: 'hero-copy' },
+            el('span', { class: 'eyebrow', text: 'CADA ESTANCIA EMPIEZA CONTIGO' }),
+            el('h1', { text: name ? `${greeting()}, ${name}.` : `${greeting()}.` }),
+            el('p', { text: 'Grandes experiencias. Pequeños detalles. Todo tu hotel, en un solo lugar.' }),
+            el('a', { href: '#reservas/nueva', class: 'btn hero-cta', text: 'Crear una reserva ↗' })),
+        el('div', { class: 'hero-art', 'aria-hidden': 'true' },
+            el('div', { class: 'art-sun' }), el('div', { class: 'art-arch' }), el('div', { class: 'art-building' }),
+            el('span', { class: 'art-caption', text: 'EL ARTE DE RECIBIR BIEN' })));
 
     const tiles = el('div', { class: 'tiles' },
         ...TILES
             .filter(([key]) => hasAnyRole(user, views[key].roles))
             .map(([key, title, text, paths]) => el('a', { href: `#${key}`, class: 'tile' },
-                el('span', { class: 'tile-icon' }, icon(paths)),
+                el('div', { class: 'tile-top' }, el('span', { class: 'tile-icon' }, icon(paths)), el('span', { class: 'tile-arrow', text: '↗', 'aria-hidden': 'true' })),
                 el('h2', { text: title }),
                 el('p', { text }))));
 
@@ -238,10 +249,10 @@ function renderHome(container) {
     }));
 
     const status = el('section', { class: 'card status-card' },
-        el('h2', { text: 'Estado del sistema' }),
-        healthButton);
+        el('div', { class: 'status-copy' }, el('span', { class: 'connection-symbol', text: '⌁', 'aria-hidden': 'true' }), el('div', {}, el('h2', { text: 'Siempre a tu servicio' }), el('p', { class: 'muted', text: 'Comprueba la conexión con el servidor cuando lo necesites.' }))), healthButton);
 
-    container.append(hero, tiles, status);
+    const sectionHeading = el('div', { class: 'section-heading' }, el('div', {}, el('span', { class: 'eyebrow', text: 'TODO A MANO' }), el('h2', { text: 'Tu operación, sin complicaciones' })), el('span', { class: 'muted', text: '¿Por dónde empezamos?' }));
+    container.append(hero, sectionHeading, tiles, status);
 }
 
 // Ejecuta una acción, evita doble clic y muestra el error de la API de forma legible.
@@ -278,6 +289,11 @@ async function start() {
 }
 
 bindLoadingIndicator(onLoadingChange);
+document.querySelector('.skip-link').addEventListener('click', (event) => {
+    event.preventDefault();
+    document.getElementById('view').focus();
+});
+document.getElementById('workspace-date').textContent = new Intl.DateTimeFormat('es-PE', { weekday: 'long', day: 'numeric', month: 'long' }).format(new Date());
 window.addEventListener('hashchange', renderRoute);
 window.addEventListener('api:unauthorized', handleUnauthorized);
 start();
