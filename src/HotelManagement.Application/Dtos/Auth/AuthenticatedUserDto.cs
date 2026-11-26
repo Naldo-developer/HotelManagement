@@ -1,4 +1,4 @@
-﻿namespace HotelManagement.Application.DTOs.Auth;
+﻿namespace HotelManagement.Application.Dtos.Auth;
 
 public class AuthenticatedUserDto
 {

@@ -1,5 +1,5 @@
 ﻿using HotelManagement.Application.Configuration;
-using HotelManagement.Application.DTOs.Auth;
+using HotelManagement.Application.Dtos.Auth;
 using HotelManagement.Application.Exceptions;
 using HotelManagement.Application.Security;
 using HotelManagement.Application.UseCases.Auth.Commands;

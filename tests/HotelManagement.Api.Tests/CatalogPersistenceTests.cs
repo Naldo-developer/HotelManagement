@@ -4,11 +4,13 @@ using System.Security.Claims;
 using HotelManagement.Api.Configuration;
 using HotelManagement.Api.Controllers;
 using HotelManagement.Application.Configuration;
+using HotelManagement.Application.Dtos.Guests;
 using HotelManagement.Application.Dtos.Hotels;
 using HotelManagement.Application.Dtos.RoomTypes;
 using HotelManagement.Application.Dtos.Rooms;
 using HotelManagement.Application.Dtos.Reservations;
 using HotelManagement.Infrastructure.Configuration;
+using HotelManagement.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Builder;
@@ -297,7 +299,7 @@ public sealed class CatalogPersistenceTests
 
             var guest = await guestResponse.Content
                 .ReadFromJsonAsync<
-                    HotelManagement.Application.DTOs.Guests.GuestDto>();
+                    GuestDto>();
 
             Assert.NotNull(guest);
 

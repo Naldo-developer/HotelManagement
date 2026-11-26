@@ -1,5 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
-using HotelManagement.Application.DTOs.Guests;
+using HotelManagement.Application.Dtos.Guests;
 using HotelManagement.Application.Exceptions;
 using HotelManagement.Domain.Entities;
 using HotelManagement.Domain.Repositories;

@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace HotelManagement.Application.DTOs.Guests;
+namespace HotelManagement.Application.Dtos.Guests;
 
 //Filtros de búsqueda de huéspedes con paginación.
 public class GuestFilterDto

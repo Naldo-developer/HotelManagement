@@ -2,6 +2,7 @@
 using HotelManagement.Domain.Entities;
 using HotelManagement.Domain.Repositories;
 using HotelManagement.Infrastructure.Configuration;
+using HotelManagement.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Npgsql;
 

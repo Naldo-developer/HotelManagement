@@ -1,59 +1,123 @@
 # Arquitectura y convenciones
 
-La solución usa CQRS + MediatR para organizar los casos de uso. Los Services
-tradicionales no deben concentrar la lógica de negocio.
+HotelManagement utiliza .NET 10, ASP.NET Core, PostgreSQL y EF Core. Los casos
+de uso siguen CQRS con MediatR 12.5.0; la interfaz Aurora es una web estática
+servida por la API y utiliza autenticación por cookie del mismo origen.
 
-## Dependencia y registro inicial
+## Estructura
 
-Se fija **MediatR 12.5.0** en `HotelManagement.Application`. Es una versión estable
-con licencia Apache-2.0, elegida para esta configuración inicial sin requerir una
-clave de licencia. No es la versión más reciente.
+```text
+HotelManagement/
+├── src/
+│   ├── HotelManagement.Api/
+│   │   ├── Authorization/       Roles y políticas de acceso
+│   │   ├── Configuration/       Registro de servicios HTTP y autenticación
+│   │   ├── Controllers/         Endpoints que envían Commands y Queries
+│   │   ├── ErrorHandling/       ProblemDetails y manejo central de errores
+│   │   └── wwwroot/             Interfaz Aurora: HTML, CSS, JS e imágenes
+│   ├── HotelManagement.Application/
+│   │   ├── Configuration/       AddApplication y registro de MediatR
+│   │   ├── Dtos/                Contratos agrupados por funcionalidad
+│   │   ├── Exceptions/          Errores de aplicación
+│   │   ├── Security/            Contrato del servicio de hashing
+│   │   └── UseCases/            Commands, Queries y mapeos por funcionalidad
+│   ├── HotelManagement.Domain/
+│   │   ├── Entities/            Entidades sin dependencias de persistencia
+│   │   └── Repositories/        Contratos de acceso a datos por entidad
+│   └── HotelManagement.Infrastructure/
+│       ├── Configuration/       AddInfrastructure y registro de dependencias
+│       ├── Persistence/         HotelManagementDbContext y modelo de EF Core
+│       ├── Repositories/        Implementaciones PostgreSQL
+│       └── Security/            Hashing y aprovisionamiento demo
+├── database/                    Esquema, seed e incrementos SQL versionados
+├── tests/HotelManagement.Api.Tests/
+├── scripts/                     Publicación y verificación de entrega local
+├── .github/workflows/ci.yml      Compilación, PostgreSQL, pruebas y publicación
+└── docs/                        Arquitectura, decisiones y evidencias
+```
 
-El paquete ofrece destinos .NET 6.0 y .NET Standard 2.0, compatibles con el destino
-`net10.0` de la solución, que consume los recursos del destino .NET 6.0.
-Las dependencias declaradas para ese destino son:
+## Dependencias entre capas
 
-- `MediatR.Contracts >= 2.0.1 y < 3.0.0`.
-- `Microsoft.Extensions.DependencyInjection.Abstractions >= 8.0.0`.
+```mermaid
+flowchart LR
+    Api --> Application
+    Api --> Infrastructure
+    Infrastructure --> Application
+    Infrastructure --> Domain
+    Application --> Domain
+```
 
-El destino alternativo .NET Standard 2.0 también requiere
-`Microsoft.Bcl.AsyncInterfaces >= 8.0.0`; no es el destino consumido aquí.
+Domain permanece independiente de las otras capas, EF Core y Npgsql.
+Application referencia Domain; no referencia Infrastructure ni la API.
+Infrastructure implementa los contratos de repositorio y seguridad.
+La API compone los registros AddApplication, AddInfrastructure y sus servicios
+HTTP. Las pruebas acceden a la aplicación mediante la API y sus dependencias.
 
-La integración con `IServiceCollection` viene incluida; no se agrega el paquete
-separado `MediatR.Extensions.Microsoft.DependencyInjection`.
+Las reglas de reservas, estadías y caja actualmente se reparten entre handlers,
+repositorios y restricciones SQL. Trasladar reglas a otra capa es un cambio
+funcional que requiere conservar transacciones y garantías de concurrencia.
 
-Fuentes de la versión y sus requisitos:
-[NuGet 12.5.0](https://www.nuget.org/packages/MediatR/12.5.0) y
-[documentación de la versión](https://github.com/jbogard/MediatR/blob/v12.5.0/README.md).
+## Convenciones
 
-`Configuration/ApplicationServicesExtensions.cs` expone `AddApplication`, que
-registra MediatR y busca handlers en el ensamblado que contiene esa extensión:
-`HotelManagement.Application`. `Program.cs` invoca esta extensión antes de
-`builder.Build()`. El registro queda preparado para los futuros handlers.
+- Usar `Application.Dtos.<Funcionalidad>` de manera uniforme, respetando el
+  nombre `Dtos` de la carpeta. Las rutas HTTP y propiedades JSON se conservan.
+- Commands en `UseCases/<Funcionalidad>/Commands` y Queries en `Queries`.
+- Mantener los mapeos junto a su funcionalidad: `ReservationMapping`,
+  `PaymentMapping`, etc. No se exige una carpeta global Mappings.
+- Las acciones de controllers envían solicitudes con ISender y propagan
+  HttpContext.RequestAborted; el acceso a EF Core corresponde a Infrastructure.
+- Los repositorios son específicos por entidad. Sus operaciones asíncronas
+  reciben CancellationToken cuando corresponde.
+- Las excepciones de aplicación se traducen centralmente a ProblemDetails.
+- Los servicios se registran mediante las extensiones de cada capa. No crear
+  archivos DependencyInjection duplicados de registros ya existentes.
+- Los archivos de pruebas pertenecen al proyecto de tests, fuera de src.
 
-## Casos de uso
+## Persistencia y configuración
 
-- Ubicar los comandos en `Application/UseCases/<Entidad>/Commands` y las consultas
-  en `Application/UseCases/<Entidad>/Queries`.
-- Cada Command/Query debe ser `public` y su Handler `internal`, ambos en el mismo
-  archivo: solicitud arriba y handler debajo.
-- `Handle` conserva su parámetro `CancellationToken` y lo propaga a las operaciones
-  asíncronas que lo admiten.
-- Usar `Create` uniformemente para las operaciones de creación.
-- Los controllers reciben `ISender` y envían solicitudes mediante `ISender.Send`.
-  Sus acciones usan llaves y `return`; no contienen DbContext, LINQ ni lógica de
-  negocio.
-- Usar repositorios específicos por entidad; no usar `GenericRepository`.
-- Domain permanece independiente de las otras capas y de los proveedores de
-  persistencia. Application no referencia Infrastructure.
+`Infrastructure/Persistence/HotelManagementDbContext.cs` representa el modelo EF.
+El SQL de `database/` es la fuente de verdad, incluidas restricciones de exclusión
+y triggers que no están representados por completo en el modelo generado.
+Aplicar los incrementos en orden; actualmente 001–004. No se utilizan migraciones
+EF paralelas al historial SQL. Ver [scaffolding](scaffolding.md).
 
-## Alcance actual
+La conexión se configura con `ConnectionStrings:DefaultConnection`, mediante
+User Secrets en Development o variables de entorno. No se versionan conexiones
+reales, contraseñas ni claves. La salud HTTP no comprueba PostgreSQL.
+Las cuentas ficticias se aprovisionan explícitamente en Development; Production
+requiere una base y cuentas existentes. Ver [entrega local](r06-entrega-local.md).
 
-Esta configuración no agrega solicitudes, handlers ficticios ni endpoints de
-negocio. El SQL y el modelo generado están integrados, pero la conexión PostgreSQL,
-el registro del DbContext serán tareas posteriores. La API cuenta con
-[manejo centralizado de errores](manejo-errores.md) mediante ProblemDetails.
+## Verificación y CI
 
-Comprobar el arranque, `/api/health` y Swagger valida la infraestructura HTTP.
-Estas comprobaciones no verifican una operación CQRS real ni acceso a PostgreSQL:
-todavía no hay casos de uso implementados.
+El workflow `ci.yml` se activa en pushes, pull requests y ejecución manual:
+
+1. Instala el SDK .NET 10 y levanta PostgreSQL 18 en un servicio temporal.
+2. Restaura dependencias y compila Release tratando advertencias como errores.
+3. Ejecuta la suite con R02_POSTGRES_ADMIN y sin paralelismo entre colecciones.
+4. Rechaza resultados vacíos u omitidos y publica la aplicación Release.
+5. Conserva resultados TRX y la publicación como artefactos identificados por SHA.
+
+La contraseña del contenedor de CI es ficticia y desechable, independiente de
+la base local. Cada prueba de integración crea y elimina su propia base aleatoria.
+El workflow solo tiene permiso de lectura sobre el repositorio y no despliega.
+Su resultado remoto se consulta en Actions; preparar el archivo no acredita
+una ejecución de GitHub.
+
+Antes de la reorganización semántica se ejecutaron las 50 pruebas en Release
+con PostgreSQL local autenticado: 50 aprobadas, 0 fallidas, 0 omitidas.
+También se comprobó la publicación Release. Las pruebas de integridad conservan
+la cadena administrativa externa para crear conexiones nuevas sin perder su
+contraseña al abrir la conexión principal.
+
+La reorganización de namespaces se aplica mediante las referencias resueltas por
+Rider. La verificación de cambios funcionales y de CI se distingue de esa operación.
+
+Referencias: [setup-dotnet](https://github.com/actions/setup-dotnet) y
+[servicios PostgreSQL de GitHub Actions](https://docs.github.com/en/actions/tutorials/use-containerized-services/create-postgresql-service-containers).
+
+## Cambios funcionales posteriores
+
+Auditoría completa con actor real, pruebas adicionales de caja concurrente y
+registro automático de incrementos SQL requieren cambios propios. La interfaz
+Y06 y la aceptación Y08 mantienen su seguimiento con el equipo. Esta organización
+no implica que esos pendientes estén implementados.

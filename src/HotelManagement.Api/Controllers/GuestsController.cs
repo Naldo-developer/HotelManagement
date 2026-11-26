@@ -1,9 +1,9 @@
-using HotelManagement.Application.DTOs.Guests; 
 using HotelManagement.Application.UseCases.Guests.Queries;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using HotelManagement.Application.UseCases.Guests.Commands;
 using HotelManagement.Api.Authorization;
+using HotelManagement.Application.Dtos.Guests;
 using Microsoft.AspNetCore.Authorization;
 
 namespace HotelManagement.Api.Controllers;

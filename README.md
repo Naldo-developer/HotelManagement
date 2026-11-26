@@ -3,6 +3,11 @@
 API .NET 10, PostgreSQL e interfaz estática del mismo origen. Capas Api,
 Application, Domain e Infrastructure; CQRS con MediatR.
 
+La [guía de arquitectura](docs/arquitectura.md) describe las carpetas, dependencias
+y convenciones actuales. El workflow `.github/workflows/ci.yml` prepara la
+compilación Release, pruebas con PostgreSQL 18 y artefactos de publicación en
+cada push/PR; su resultado se consulta en GitHub Actions.
+
 Verificación de Ronaldo del 26/11/2026: R05 implementado y probado; **R06
 completado para entrega local en esta PC**; R07 parcial.
 [Resultados R05](docs/verificacion-20261126.md) y

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using HotelManagement.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 
-namespace HotelManagement.Infrastructure.Configuration;
+namespace HotelManagement.Infrastructure.Persistence;
 
 public partial class HotelManagementDbContext : DbContext
 {

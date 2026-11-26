@@ -1,5 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
-using HotelManagement.Application.DTOs.Auth;
+using HotelManagement.Application.Dtos.Auth;
 using HotelManagement.Application.Exceptions;
 using HotelManagement.Application.Security;
 using HotelManagement.Domain.Repositories;

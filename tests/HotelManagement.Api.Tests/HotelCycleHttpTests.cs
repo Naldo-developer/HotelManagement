@@ -16,6 +16,8 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Npgsql;
 using System.Security.Claims;
+using HotelManagement.Application.Dtos.Guests;
+using HotelManagement.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Http;
@@ -92,7 +94,7 @@ public sealed class HotelCycleHttpTests
             using var guestResponse = await client.PostAsJsonAsync("/api/guests",
                 new { firstName = "Prueba", lastName = "R05" });
             Assert.Equal(HttpStatusCode.Created, guestResponse.StatusCode);
-            var guest = await guestResponse.Content.ReadFromJsonAsync<HotelManagement.Application.DTOs.Guests.GuestDto>();
+            var guest = await guestResponse.Content.ReadFromJsonAsync<GuestDto>();
             Assert.NotNull(guest);
             var guestId = guest.Id;
             var today = DateOnly.FromDateTime(DateTime.UtcNow);

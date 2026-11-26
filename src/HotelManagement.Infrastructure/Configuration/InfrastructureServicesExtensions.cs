@@ -3,6 +3,7 @@ using HotelManagement.Infrastructure.Repositories;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using HotelManagement.Application.Security;
+using HotelManagement.Infrastructure.Persistence;
 using HotelManagement.Infrastructure.Security;
 
 namespace HotelManagement.Infrastructure.Configuration;

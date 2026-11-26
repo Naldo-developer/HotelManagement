@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace HotelManagement.Application.DTOs.Guests;
+namespace HotelManagement.Application.Dtos.Guests;
 
 /// Datos para registrar un huésped.
 /// Regla del documento: si se informa DocumentType o DocumentNumber,

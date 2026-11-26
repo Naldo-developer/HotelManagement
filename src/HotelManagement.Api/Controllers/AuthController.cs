@@ -1,6 +1,6 @@
 ﻿using System.Globalization;
 using System.Security.Claims;
-using HotelManagement.Application.DTOs.Auth;
+using HotelManagement.Application.Dtos.Auth;
 using HotelManagement.Application.UseCases.Auth.Commands;
 using MediatR;
 using Microsoft.AspNetCore.Authentication;

@@ -5,6 +5,7 @@ using HotelManagement.Infrastructure.Configuration;
 using Microsoft.EntityFrameworkCore;
 using Npgsql;
 using System.Data;
+using HotelManagement.Infrastructure.Persistence;
 
 namespace HotelManagement.Infrastructure.Repositories;
 

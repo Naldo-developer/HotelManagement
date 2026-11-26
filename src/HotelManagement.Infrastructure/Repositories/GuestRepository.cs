@@ -3,6 +3,7 @@ using HotelManagement.Domain.Repositories;
 using HotelManagement.Infrastructure.Configuration; 
 using Microsoft.EntityFrameworkCore;
 using HotelManagement.Application.Exceptions;
+using HotelManagement.Infrastructure.Persistence;
 using Npgsql;
 
 namespace HotelManagement.Infrastructure.Repositories;
