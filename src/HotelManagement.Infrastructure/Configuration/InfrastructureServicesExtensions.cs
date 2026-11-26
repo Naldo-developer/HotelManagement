@@ -30,6 +30,7 @@ public static class InfrastructureServicesExtensions
         services.AddScoped<IConsumptionRepository, ConsumptionRepository>();
         services.AddScoped<IPaymentRepository, PaymentRepository>();
         services.AddScoped<IEmployeeRepository, EmployeeRepository>();
+        services.AddScoped<IMaintenanceRepository, MaintenanceRepository>();
 
         return services;
     }
