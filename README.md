@@ -1,110 +1,120 @@
-﻿# HotelManagement
+# HotelManagement
 
-API .NET 10 con interfaz estatica del mismo origen y PostgreSQL.
-Organizada en Api, Application, Domain e Infrastructure; los casos de uso
-siguen CQRS con MediatR y repositorios registrados por DI.
+API .NET 10, PostgreSQL e interfaz estática del mismo origen. Capas Api,
+Application, Domain e Infrastructure; CQRS con MediatR.
 
-Estado comprobado al 22/11/2026 sobre origin/main
-28cfee680c51056b5a894c0a5f963efd120fac74: habitaciones, huespedes,
-reservas, autenticacion por cookie, permisos y apertura de estadias.
-Consumos, pagos, check-out y cambio operativo de habitaciones siguen pendientes.
-Este README es un avance R07; no acredita una entrega final ni URL publica.
+Verificación de Ronaldo del 26/11/2026: R05 implementado y probado; R06 y R07
+parciales. [Resultados completos](docs/verificacion-20261126.md).
+Main revisado: bd3b48b. Código del ciclo probado: 7cf7807.
+Versión Release publicada: d6690a3c2ec4d5d96ae59af777cb55eedfea9edc.
+No se acredita una entrega pública ni aceptación Y08.
 
 ## Preparar y ejecutar
 
-Requiere SDK .NET 10 y PostgreSQL (las pruebas se ejecutaron con version 18).
-En una base de demo vacia, aplicar en orden los scripts descritos en
-[database/README.md](database/README.md):
+Requiere SDK .NET 10 y PostgreSQL (pruebas con PostgreSQL 18).
+En una base vacía aplicar en orden:
 
 1. database/001_initial_schema.sql
 2. database/002_demo_seed.sql
 3. database/003_room_period_integrity.sql
+4. database/004_maintenance_trigger_search_path.sql
 
-Configurar externamente ConnectionStrings__DefaultConnection. No guardar
-credenciales en appsettings ni subirlas a Git. En Development, la variable
-DemoAccounts__Password permite crear cuentas demo con password hasheada:
-admin.demo, recepcion.demo, caja.demo y mantenimiento.demo. Debe tener al
-menos ocho caracteres; no cambia passwords de cuentas existentes.
-Production no crea cuentas automaticamente.
+Configurar externamente `ConnectionStrings__DefaultConnection` con host, puerto,
+base, usuario y contraseña del entorno. No guardar secretos en Git.
+En Development, `DemoAccounts__Password` (mínimo ocho caracteres) aprovisiona
+admin.demo, recepcion.demo, caja.demo y mantenimiento.demo con hash.
+No cambia contraseñas existentes. Production requiere cuentas ya aprovisionadas.
+El seed contiene datos ficticios y correos example.invalid.
 
-Desde la raiz:
+```powershell
+dotnet build HotelManagement.sln --nologo
+dotnet run --project src/HotelManagement.Api --launch-profile http
+```
 
-    dotnet build HotelManagement.sln --nologo
-    dotnet run --project src/HotelManagement.Api --launch-profile http
+El perfil http configura Development en http://localhost:5075. Web `/`, salud
+`/api/health`, Swagger `/swagger` solo en Development. Salud comprueba HTTP,
+no PostgreSQL. Estas rutas proceden de configuración; el arranque de esta sesión
+no quedó verificado. **URL de entrega: pendiente de proporcionar y verificar.**
 
-El perfil http usa Development en http://localhost:5075.
-La web esta en /, salud en /api/health y Swagger en /swagger.
-Swagger solo esta disponible en Development. Salud comprueba HTTP,
-no conectividad PostgreSQL. El perfil https usa https://localhost:7143
-y requiere certificado de desarrollo de confianza.
+## Pruebas ejecutadas
 
-## Recorrido disponible
+Configurar `R02_POSTGRES_ADMIN` con conexión administrativa a PostgreSQL de prueba.
+Cada prueba crea y elimina su base aleatoria. Ver [aislamiento y comandos de
+PostgreSQL](tests/HotelManagement.Api.Tests/README.md).
 
-Iniciar sesion en la web. ADMIN puede registrar y editar habitaciones;
-ADMIN y RECEPTION operan huespedes y reservas. Crear un huesped,
-buscar disponibilidad por fechas, reservar y consultar o cancelar la reserva.
-Recargar comprueba que los datos siguen visibles.
+```powershell
+dotnet test HotelManagement.sln --nologo -- xUnit.ParallelizeTestCollections=false
+```
 
-El check-in de C05 esta disponible por API (POST /api/stays/check-in)
-y requiere una reserva vigente y usuario autorizado. Consultar el detalle
-devuelto en Location. Repetir check-in devuelve 409. La interfaz del ciclo
-completo depende de Y06; no se puede completar aun consumo, pago y check-out.
+Resultado real: **45 aprobadas, 0 fallidas, 0 omitidas**. Compilación correcta.
+Sin R02_POSTGRES_ADMIN las pruebas de integración se omiten y no acreditan R05.
+El ciclo usa login real y comprueba huésped, reserva concurrente 201/409,
+check-in repetido 409, consumo, saldo pendiente 409 sin cerrar la estadía,
+pago, saldo cero, check-out, segundo check-out 409 y estado operativo T03.
+Tras detener TestServer verifica persistencia con contexto nuevo.
 
-Sin sesion las rutas protegidas devuelven 401; sin rol autorizado, 403.
-Duplicados, solapamientos y transiciones incompatibles devuelven 409.
-Consultar [C05](docs/c05-estadias.md) y [T06](docs/t06-reservas.md).
+## Recorrido de demo
 
-## Compilacion y pruebas
+Con datos ficticios y una cuenta autorizada:
 
-    dotnet build HotelManagement.sln --nologo
-    dotnet test HotelManagement.sln --no-build --nologo -- xUnit.ParallelizeTestCollections=false
+1. Iniciar sesión en la web; consultar habitaciones y registrar un huésped.
+2. Buscar disponibilidad, reservar y consultar la reserva. Una reserva de prueba
+   independiente permite mostrar cancelación T06.
+3. Por API, abrir la estadía con `POST /api/stays/check-in` y reservationId.
+   Repetir devuelve 409.
+4. Crear un servicio ficticio y registrar `POST /api/consumptions` con stayId,
+   serviceId y quantity. Consultar `/api/payments/summary/by-reservation/{id}`.
+5. Intentar `POST /api/stays/check-out` con stayId mientras hay saldo: 409.
+6. Registrar `POST /api/payments` con reservationId, amount y paymentMethod CASH.
+   Confirmar saldo cero y completar check-out. Consultar estadía y reserva.
+7. Cerrar sesión y comprobar que las rutas protegidas requieren autenticación.
 
-Para las pruebas PostgreSQL definir R02_POSTGRES_ADMIN con una conexion
-administrativa a una instancia de prueba aislada. Cada prueba crea y elimina
-su base aleatoria. Instrucciones en [tests](tests/HotelManagement.Api.Tests/README.md).
-Sin esa variable las pruebas de integracion se omiten: no equivale a verificar
-persistencia. Se uso Command Timeout=120 y Timeout=60 en el entorno local.
+El ciclo HTTP está automatizado; la aceptación visual del ciclo completo y Y08
+siguen pendientes del equipo. No se atribuyen esas tareas a Ronaldo.
 
-Evidencia del 22/11/2026:
-- Build de la rama feature/r05-ciclo-http: 0 errores y 0 advertencias.
-- Suite con PostgreSQL real: 45 aprobadas, 0 fallidas, 0 omitidas.
-- R05 (7586d41, sobre 08fc50a): login real con cuentas efimeras, credenciales
-  incorrectas, cookie, huesped, reserva concurrente y check-in repetido.
-- Publish Release en la rama chore/r05-r07-preparacion: correcto; DLL y
-  archivos estaticos verificados. La prueba completa del DLL publicado
-  no pudo ejecutarse por rechazo automatico del comando de arranque.
+## Release y entrega
 
-## Publicacion y pendientes
+Comando probado desde la rama del PR #26, con destino nuevo:
 
-    ./scripts/Publish-Delivery.ps1 -OutputDirectory C:/hotel-delivery-nuevo
+```powershell
+./scripts/Publish-Delivery.ps1 -OutputDirectory "$env:TEMP/hotel-release-20261126"
+```
 
-En destino usar runtime ASP.NET Core 10, PostgreSQL y cuentas aprovisionadas.
-Configurar ConnectionStrings__DefaultConnection, ASPNETCORE_ENVIRONMENT=Production
-y ASPNETCORE_URLS externamente. Arrancar desde la carpeta publicada:
+Release correcto: DLL, HTML, CSS y JavaScript presentes. Para el destino usar
+runtime ASP.NET Core 10 y configurar externamente ConnectionStrings__DefaultConnection,
+ASPNETCORE_ENVIRONMENT=Production y ASPNETCORE_URLS. Desde la carpeta publicada:
 
-    dotnet HotelManagement.Api.dll
+```powershell
+dotnet HotelManagement.Api.dll
+```
 
-[Test-Delivery.ps1](scripts/Test-Delivery.ps1) prepara una comprobacion con
-DELIVERY_USERNAME y DELIVERY_PASSWORD externos. Su sintaxis fue validada;
-el recorrido publicado permanece sin verificar. Ver detalles y limites en
-[preparacion de entrega](docs/preparacion-entrega.md).
+Comprobación preparada (pendiente de ejecución), con DELIVERY_USERNAME y
+DELIVERY_PASSWORD externos y una cuenta ya aprovisionada:
 
-Orden de cierre: R05 completo depende de T03 y C06-C08; R06 depende de R05
-y de validar alojamiento, login publicado, HTTPS y claves Data Protection;
-R07 final depende de R06 y Y08. Y08 requiere Y04A y Y06, aun pendientes.
-No hay hash de release ni URL de entrega validada.
+```powershell
+./scripts/Test-Delivery.ps1 -PublishedDirectory "$env:TEMP/hotel-release-20261126"
+```
 
-## Equipo y revision
+La revisión automática bloqueó el comando de aprovisionamiento y arranque antes
+de ejecutarlo (`blocked by policy`, sin razón adicional). No se verificaron
+Production, web publicada, login ni URL de entrega. Falta completar esos pasos
+y comprobar HTTPS/proxy y persistencia de claves Data Protection en el destino.
 
-Ronaldo Cusi: PostgreSQL, configuracion y entrega (R01-R07).
-Thomas: catalogos, habitaciones y reservas. Charly: autenticacion, huespedes,
-estadias y caja. Yadhira: interfaz y aceptacion en navegador.
+## Autores y estado de revisión
 
-Evidencia integrada: [R04 #25](https://github.com/Naldo-developer/HotelManagement/pull/25),
-[T06 #28](https://github.com/Naldo-developer/HotelManagement/pull/28),
-[Y07 #33](https://github.com/Naldo-developer/HotelManagement/pull/33),
-[C04 #34](https://github.com/Naldo-developer/HotelManagement/pull/34) y
-[C05 #35](https://github.com/Naldo-developer/HotelManagement/pull/35).
-La preparacion R06/R07 sigue en revision en
-[PR #26](https://github.com/Naldo-developer/HotelManagement/pull/26).
-Los merges se realizan mediante revision del equipo, sin pushes directos a main.
+Autores identificados en los commits de los PR (la identidad Git no sustituye
+una revisión de aceptación):
+
+| Autor | Aportes y PR |
+| --- | --- |
+| Ronaldo Cusi / Naldo-developer | R03, R04 y preparación R05–R07; [#25](https://github.com/Naldo-developer/HotelManagement/pull/25), [#26](https://github.com/Naldo-developer/HotelManagement/pull/26) |
+| chuchuv3l0z (Thomas) | T06 [#28](https://github.com/Naldo-developer/HotelManagement/pull/28), T03 [#43](https://github.com/Naldo-developer/HotelManagement/pull/43) |
+| charly calderon / charlycalderon-oss | C06 [#37](https://github.com/Naldo-developer/HotelManagement/pull/37), C07 [#38](https://github.com/Naldo-developer/HotelManagement/pull/38), C08 [#39](https://github.com/Naldo-developer/HotelManagement/pull/39) |
+| Starqx-ym (Yadhira) | Y07 [#33](https://github.com/Naldo-developer/HotelManagement/pull/33) y mejora visual #36 |
+
+PR #26 confirmado abierto el 26/11/2026; se reutiliza su rama y preparación.
+R05 ya cuenta con sus dependencias integradas y suite completa aprobada.
+R06 queda parcial por arranque y entrega pendientes. R07 queda parcial por R06,
+URL verificada, integración/aceptación Y08 y reproducción por otro integrante.
+No se encontró evidencia versionada de esa reproducción ni un merge Y08.
+Registrar integrante, fecha, hash, comandos y resultados cuando ocurra.
