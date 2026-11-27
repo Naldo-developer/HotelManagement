@@ -3,27 +3,36 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="theme-color" content="#112027">
-    <title>HotelManagement</title>
+    <meta name="theme-color" content="#15283f">
+    <title>Aurora · Hotel</title>
+    <meta name="description" content="Aurora Hotel. Espacio de gestión para el equipo: habitaciones, huéspedes y reservas.">
+    <link rel="icon" href="images/aurora-mark.svg" type="image/svg+xml">
+    <link rel="preload" as="image" href="images/aurora-lobby.png">
     <link rel="stylesheet" href="css/styles.css">
 </head>
-<body>
+<body class="is-login">
+<a class="skip-link" href="#view">Saltar al contenido</a>
 <div id="loading" class="loading" hidden role="status" aria-label="Cargando"></div>
 
 <header class="topbar">
     <a class="brand" href="#inicio">
-        <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 21h18"/><path d="M5 21V7l7-4 7 4v14"/><path d="M9 21v-6h6v6"/><path d="M12 9v2"/></svg>
-        <span>HotelManagement</span>
+        <svg viewBox="0 0 40 48" width="32" height="38" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true"><path d="M5 42 20 6l15 36M11 28h18M4 42h11m10 0h11M20 6v36"/><path d="M10 34h20" opacity=".45"/></svg>
+        <span>AURORA<small>HOTEL · LIMA</small></span>
     </a>
+    <div class="nav-label">GESTIÓN DEL HOTEL</div>
     <nav id="nav" class="nav" aria-label="Navegación principal"></nav>
+    <div class="sidebar-note"><span class="sidebar-note-icon">A / H</span><strong>Una estancia.<br>Mil detalles.</strong><p>El sello Aurora está en<br>cómo recibimos a cada huésped.</p></div>
     <div id="session" class="session"></div>
 </header>
 
+<div class="workspace">
+<header class="workspace-bar"><div><span class="workspace-label">AURORA / EQUIPO</span><p id="page-label">Bienvenido a tu espacio</p></div><time id="workspace-date"></time></header>
 <div id="messages" class="messages" aria-live="polite"></div>
 
-<main id="view" class="view"></main>
+<main id="view" class="view" tabindex="-1"></main>
 
-<footer class="footer">HotelManagement · Gestión hotelera</footer>
+<footer class="footer"><span>AURORA HOTEL <span class="footer-divider">/</span> LIMA, PERÚ</span><span>Una estancia. Mil detalles.</span></footer>
+</div>
 
 <script type="module" src="js/app.js"></script>
 </body>

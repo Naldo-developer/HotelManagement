@@ -1,6 +1,8 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using HotelManagement.Application.Transactions;
+using System.ComponentModel.DataAnnotations;
 using HotelManagement.Application.Dtos.Maintenances;
-using HotelManagement.Application.Exceptions;
+using HotelManagement.Application.Mappings;
+using HotelManagement.Domain.Exceptions;
 using HotelManagement.Domain.Repositories;
 using MediatR;
 
@@ -8,7 +10,7 @@ namespace HotelManagement.Application.UseCases.Maintenances.Commands;
 
 public sealed class CloseMaintenanceCommand(
     long maintenanceId,
-    CloseMaintenanceDto input) : IRequest<MaintenanceDto>
+    CloseMaintenanceDto input) : IRequest<MaintenanceDto>, ITransactionalRequest
 {
     public long MaintenanceId { get; } = maintenanceId;
     public CloseMaintenanceDto Input { get; } = input;

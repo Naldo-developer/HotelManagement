@@ -15,9 +15,8 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Npgsql;
-using System.Security.Claims;
-using Microsoft.AspNetCore.Authentication;
-using Microsoft.AspNetCore.Authentication.Cookies;
+using HotelManagement.Application.Dtos.Guests;
+using HotelManagement.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Http;
 
 namespace HotelManagement.Api.Tests;
@@ -59,6 +58,7 @@ public sealed class HotelCycleHttpTests
             builder.Services.AddInfrastructure(connectionString);
             builder.Services.AddApplication();
             builder.Services.AddApiErrorHandling();
+            JwtTestSupport.Configure(builder);
             builder.Services.AddApiAuthentication();
             builder.Services.AddControllers().AddApplicationPart(typeof(RoomsController).Assembly);
             await using var app = builder.Build();
@@ -81,8 +81,10 @@ public sealed class HotelCycleHttpTests
                 new { username = "admin.demo", password }))
             {
                 Assert.Equal(HttpStatusCode.OK, login.StatusCode);
-                var cookie = login.Headers.GetValues("Set-Cookie").First().Split(';')[0];
-                client.DefaultRequestHeaders.Add("Cookie", cookie);
+                var identity = await login.Content.ReadFromJsonAsync<HotelManagement.Application.Dtos.Auth.AuthenticatedUserDto>();
+                Assert.NotNull(identity?.AccessToken);
+                Assert.False(login.Headers.Contains("Set-Cookie"));
+                client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", identity.AccessToken);
             }
             using (var me = await client.GetAsync("/api/auth/me"))
                 Assert.Equal(HttpStatusCode.OK, me.StatusCode);
@@ -92,10 +94,18 @@ public sealed class HotelCycleHttpTests
             using var guestResponse = await client.PostAsJsonAsync("/api/guests",
                 new { firstName = "Prueba", lastName = "R05" });
             Assert.Equal(HttpStatusCode.Created, guestResponse.StatusCode);
-            var guest = await guestResponse.Content.ReadFromJsonAsync<HotelManagement.Application.DTOs.Guests.GuestDto>();
+            var guest = await guestResponse.Content.ReadFromJsonAsync<GuestDto>();
             Assert.NotNull(guest);
             var guestId = guest.Id;
-            var today = DateOnly.FromDateTime(DateTime.UtcNow);
+            // El check-in usa el día del hotel; a medianoche UTC todavía puede
+            // ser el día anterior en Lima. No usar el día del servidor de CI.
+            await using var hotelScope = app.Services.CreateAsyncScope();
+            var hotelContext = hotelScope.ServiceProvider.GetRequiredService<HotelManagementDbContext>();
+            var timezone = await hotelContext.Hotels
+                .Where(h => h.HotelId == room.HotelId)
+                .Select(h => h.Timezone).SingleAsync();
+            var today = DateOnly.FromDateTime(TimeZoneInfo.ConvertTimeFromUtc(
+                DateTime.UtcNow, TimeZoneInfo.FindSystemTimeZoneById(timezone)));
             var input = new CreateReservationDto
             {
                 RoomId = room.RoomId, PrimaryGuestId = guestId,

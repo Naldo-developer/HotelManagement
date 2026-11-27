@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using HotelManagement.Application.Exceptions;
+using HotelManagement.Domain.Exceptions;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
 

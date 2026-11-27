@@ -1,4 +1,4 @@
-using HotelManagement.Application.DTOs.Guests;  
+using HotelManagement.Application.Dtos.Guests;
 using HotelManagement.Domain.Entities;
 using HotelManagement.Domain.Repositories;
 using MediatR;

@@ -1,7 +1,9 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using HotelManagement.Application.Transactions;
+using System.ComponentModel.DataAnnotations;
 using HotelManagement.Application.Dtos.Maintenances;
-using HotelManagement.Application.Exceptions;
+using HotelManagement.Application.Mappings;
 using HotelManagement.Domain.Entities;
+using HotelManagement.Domain.Exceptions;
 using HotelManagement.Domain.Repositories;
 using MediatR;
 
@@ -9,7 +11,7 @@ namespace HotelManagement.Application.UseCases.Maintenances.Commands;
 
 public sealed class CreateMaintenanceCommand(
     CreateMaintenanceDto input,
-    long userId) : IRequest<MaintenanceDto>
+    long userId) : IRequest<MaintenanceDto>, ITransactionalRequest
 {
     public CreateMaintenanceDto Input { get; } = input;
     public long UserId { get; } = userId;

@@ -1,8 +1,9 @@
 ﻿using HotelManagement.Application.Configuration;
-using HotelManagement.Application.DTOs.Guests;
+using HotelManagement.Application.Dtos.Guests;
 using HotelManagement.Application.Exceptions;
 using HotelManagement.Application.UseCases.Guests.Commands;
 using HotelManagement.Domain.Entities;
+using HotelManagement.Domain.Exceptions;
 using HotelManagement.Domain.Repositories;
 using MediatR;
 using Microsoft.Extensions.DependencyInjection;
@@ -77,6 +78,7 @@ public class CreateGuestTests
         var services = new ServiceCollection();
         services.AddLogging();
         services.AddApplication();
+        services.AddSingleton<HotelManagement.Application.Interfaces.IUnitOfWork, FakeUnitOfWork>();
         services.AddSingleton<IGuestRepository>(repo);
         return (services.BuildServiceProvider().GetRequiredService<ISender>(), repo);
     }

@@ -1,7 +1,7 @@
 ﻿using HotelManagement.Application.Dtos.Services;
 using HotelManagement.Domain.Entities;
 
-namespace HotelManagement.Application.UseCases.Services;
+namespace HotelManagement.Application.Mappings;
 
 internal static class ServiceMapping
 {

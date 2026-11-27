@@ -1,14 +1,15 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using HotelManagement.Application.Transactions;
+using System.ComponentModel.DataAnnotations;
 using HotelManagement.Application.Dtos.Reservations;
-using HotelManagement.Application.Exceptions;
 using HotelManagement.Domain.Entities;
+using HotelManagement.Domain.Exceptions;
 using HotelManagement.Domain.Repositories;
 using MediatR;
 
 namespace HotelManagement.Application.UseCases.Reservations.Commands;
 
 public class CreateReservationCommand(CreateReservationDto input)
-    : IRequest<ReservationDto>
+    : IRequest<ReservationDto>, ITransactionalRequest
 {
     public CreateReservationDto Input { get; } = input;
 }
@@ -37,11 +38,7 @@ internal class CreateReservationCommandHandler(
         var checkInDate = input.CheckInDate!.Value;
         var checkOutDate = input.CheckOutDate!.Value;
 
-        if (checkInDate == default || checkOutDate <= checkInDate)
-        {
-            throw new BusinessValidationException(
-                "La fecha de salida debe ser posterior a la fecha de entrada.");
-        }
+        HotelManagement.Domain.Rules.ReservationRules.EnsureValidPeriod(checkInDate, checkOutDate);
 
         var reservation = new Reservation
         {

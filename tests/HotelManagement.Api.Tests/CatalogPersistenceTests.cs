@@ -1,16 +1,15 @@
-﻿using System.Net;
+using System.Net;
 using System.Net.Http.Json;
-using System.Security.Claims;
 using HotelManagement.Api.Configuration;
 using HotelManagement.Api.Controllers;
 using HotelManagement.Application.Configuration;
+using HotelManagement.Application.Dtos.Guests;
 using HotelManagement.Application.Dtos.Hotels;
 using HotelManagement.Application.Dtos.RoomTypes;
 using HotelManagement.Application.Dtos.Rooms;
 using HotelManagement.Application.Dtos.Reservations;
 using HotelManagement.Infrastructure.Configuration;
-using Microsoft.AspNetCore.Authentication;
-using Microsoft.AspNetCore.Authentication.Cookies;
+using HotelManagement.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
@@ -87,6 +86,7 @@ public sealed class CatalogPersistenceTests
             builder.Services.AddInfrastructure(connectionString);
             builder.Services.AddApplication();
             builder.Services.AddApiErrorHandling();
+            JwtTestSupport.Configure(builder);
             builder.Services.AddApiAuthentication();
 
             builder.Services.AddControllers()
@@ -102,27 +102,7 @@ public sealed class CatalogPersistenceTests
             app.UseAuthentication();
             app.UseAuthorization();
 
-            app.MapPost("/test/login/{role}",
-                async (HttpContext context, string role) =>
-                {
-                    var claims = new List<Claim>
-                    {
-                        new(ClaimTypes.Name, "usuario.prueba"),
-                        new(ClaimTypes.Role, role)
-                    };
-
-                    var identity = new ClaimsIdentity(
-                        claims,
-                        CookieAuthenticationDefaults
-                            .AuthenticationScheme);
-
-                    await context.SignInAsync(
-                        CookieAuthenticationDefaults
-                            .AuthenticationScheme,
-                        new ClaimsPrincipal(identity));
-
-                    return Results.NoContent();
-                });
+            JwtTestSupport.MapLogin(app);
 
             app.MapControllers();
 
@@ -297,7 +277,7 @@ public sealed class CatalogPersistenceTests
 
             var guest = await guestResponse.Content
                 .ReadFromJsonAsync<
-                    HotelManagement.Application.DTOs.Guests.GuestDto>();
+                    GuestDto>();
 
             Assert.NotNull(guest);
 
@@ -493,23 +473,8 @@ public sealed class CatalogPersistenceTests
         }
     }
 
-    private static async Task SignInAsync(
-        HttpClient client,
-        string role)
+    private static async Task SignInAsync(HttpClient client, string role)
     {
-        using var login = await client.PostAsync(
-            $"/test/login/{role}", null);
-
-        Assert.Equal(
-            HttpStatusCode.NoContent,
-            login.StatusCode);
-
-        var cookie = login.Headers
-            .GetValues("Set-Cookie")
-            .First()
-            .Split(';')[0];
-
-        client.DefaultRequestHeaders.Add(
-            "Cookie", cookie);
+        await JwtTestSupport.SignInAsync(client, role);
     }
 }

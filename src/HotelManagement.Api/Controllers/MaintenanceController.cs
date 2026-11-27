@@ -1,6 +1,4 @@
-﻿using System.Globalization;
-using System.Security.Claims;
-using HotelManagement.Api.Authorization;
+﻿using HotelManagement.Api.Authorization;
 using HotelManagement.Application.Dtos.Maintenances;
 using HotelManagement.Application.UseCases.Maintenances.Commands;
 using HotelManagement.Application.UseCases.Maintenances.Queries;
@@ -33,9 +31,7 @@ public class MaintenanceController(ISender sender) : ControllerBase
         [FromBody] CreateMaintenanceDto input,
         CancellationToken cancellationToken)
     {
-        var userId = long.Parse(
-            User.FindFirstValue(ClaimTypes.NameIdentifier)!,
-            CultureInfo.InvariantCulture);
+        var userId = User.GetUserId();
 
         var maintenance = await sender.Send(
             new CreateMaintenanceCommand(input, userId),

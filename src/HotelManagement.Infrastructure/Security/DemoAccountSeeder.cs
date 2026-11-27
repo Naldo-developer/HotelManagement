@@ -1,6 +1,7 @@
 ﻿using HotelManagement.Application.Security;
 using HotelManagement.Domain.Entities;
 using HotelManagement.Infrastructure.Configuration;
+using HotelManagement.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;

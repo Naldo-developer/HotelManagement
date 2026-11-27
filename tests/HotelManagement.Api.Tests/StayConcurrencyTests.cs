@@ -1,6 +1,8 @@
 using System.Data.Common;
 using HotelManagement.Application.Exceptions;
+using HotelManagement.Domain.Exceptions;
 using HotelManagement.Infrastructure.Configuration;
+using HotelManagement.Infrastructure.Persistence;
 using HotelManagement.Infrastructure.Repositories;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;

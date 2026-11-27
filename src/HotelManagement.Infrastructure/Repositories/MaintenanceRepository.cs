@@ -1,8 +1,10 @@
 ﻿using System.Data;
 using HotelManagement.Application.Exceptions;
 using HotelManagement.Domain.Entities;
+using HotelManagement.Domain.Exceptions;
 using HotelManagement.Domain.Repositories;
 using HotelManagement.Infrastructure.Configuration;
+using HotelManagement.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Npgsql;
 
@@ -41,7 +43,7 @@ public class MaintenanceRepository(
         CancellationToken cancellationToken)
     {
         await using var transaction =
-            await context.Database.BeginTransactionAsync(
+            await context.Database.BeginRepositoryTransactionAsync(
                 IsolationLevel.ReadCommitted,
                 cancellationToken);
 
@@ -116,7 +118,7 @@ public class MaintenanceRepository(
         CancellationToken cancellationToken)
     {
         await using var transaction =
-            await context.Database.BeginTransactionAsync(
+            await context.Database.BeginRepositoryTransactionAsync(
                 IsolationLevel.ReadCommitted,
                 cancellationToken);
 

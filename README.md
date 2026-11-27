@@ -3,11 +3,33 @@
 API .NET 10, PostgreSQL e interfaz estática del mismo origen. Capas Api,
 Application, Domain e Infrastructure; CQRS con MediatR.
 
-Verificación de Ronaldo del 26/11/2026: R05 implementado y probado; R06 y R07
-parciales. [Resultados completos](docs/verificacion-20261126.md).
-Main revisado: bd3b48b. Código del ciclo probado: 7cf7807.
-Versión Release publicada: d6690a3c2ec4d5d96ae59af777cb55eedfea9edc.
-No se acredita una entrega pública ni aceptación Y08.
+Autenticación actual: **JWT Bearer**, con tokens de acceso de 15 minutos.
+[Configuración y uso de JWT](docs/autenticacion-jwt.md).
+
+Los comandos de negocio utilizan Unit of Work para confirmar o revertir sus
+escrituras. El flujo `POST /api/reservations/with-guest` registra huésped y
+reserva atómicamente. Las políticas principales de reservas y estadías están
+en Domain. Ver [implementación, pruebas y guía de exposición](docs/unidad-de-trabajo.md).
+
+La revisión de estructura ubica IUnitOfWork en Application/Interfaces, los
+mapeos en Application/Mappings y mantiene UseCases con Commands, Queries y
+handlers. Los controllers delegan sin condicionales de negocio y el login
+solicita tokens a través de un puerto. [Aclaraciones de arquitectura](docs/arquitectura.md)
+explica tests, wwwroot, excepciones y la parte pendiente de organización de servicios.
+
+La [guía de arquitectura](docs/arquitectura.md) describe las carpetas, dependencias
+y convenciones actuales. El workflow `.github/workflows/ci.yml` prepara la
+compilación Release, pruebas con PostgreSQL 18 y artefactos de publicación en
+cada push/PR; su resultado se consulta en GitHub Actions.
+
+Verificación de Ronaldo del 26/11/2026: R05 implementado y probado; **R06
+completado para entrega local en esta PC**; R07 parcial.
+[Resultados R05](docs/verificacion-20261126.md) y
+[evidencia R06 local](docs/r06-entrega-local.md).
+Main revisado: 61393d6 (incluye T08). Código del ciclo probado: 7cf7807.
+Evidencia Release anterior a JWT: f15c734a7177579722c7bb6af0018bfa0872553a.
+La entrega JWT se publicó y verificó en `Delivery/jwt-20261126`.
+URL local verificada: **http://127.0.0.1:5086**. No se acredita aceptación Y08.
 
 ## Preparar y ejecutar
 
@@ -25,6 +47,9 @@ En Development, `DemoAccounts__Password` (mínimo ocho caracteres) aprovisiona
 admin.demo, recepcion.demo, caja.demo y mantenimiento.demo con hash.
 No cambia contraseñas existentes. Production requiere cuentas ya aprovisionadas.
 El seed contiene datos ficticios y correos example.invalid.
+Configurar además `Jwt:SigningKey` en User Secrets o `Jwt__SigningKey` en el
+entorno, con una clave aleatoria de al menos 32 bytes. No existe clave por defecto
+ni se guarda en appsettings. Ver el comando seguro de generación en la guía JWT.
 
 ```powershell
 dotnet build HotelManagement.sln --nologo
@@ -33,8 +58,8 @@ dotnet run --project src/HotelManagement.Api --launch-profile http
 
 El perfil http configura Development en http://localhost:5075. Web `/`, salud
 `/api/health`, Swagger `/swagger` solo en Development. Salud comprueba HTTP,
-no PostgreSQL. Estas rutas proceden de configuración; el arranque de esta sesión
-no quedó verificado. **URL de entrega: pendiente de proporcionar y verificar.**
+no PostgreSQL. La entrega Release se ejecuta por separado en
+**http://127.0.0.1:5086**, con Production y sin launchSettings.
 
 ## Pruebas ejecutadas
 
@@ -47,6 +72,14 @@ dotnet test HotelManagement.sln --nologo -- xUnit.ParallelizeTestCollections=fal
 ```
 
 Resultado real: **45 aprobadas, 0 fallidas, 0 omitidas**. Compilación correcta.
+La migración JWT se verificó después con **74 pruebas .NET y 3 pruebas del
+cliente JavaScript aprobadas**, incluidas las integraciones con PostgreSQL.
+La incorporación de Unit of Work se verificó con **95 pruebas .NET y 3
+JavaScript aprobadas**, sin fallos ni pruebas omitidas, incluyendo rollback
+entre repositorios, cancelación y el endpoint compuesto con JWT.
+Verificación posterior de la integración con T08, Aurora y R06: **50 aprobadas,
+0 fallidas, 0 omitidas**, con PostgreSQL 18 temporal en loopback. Detalles y
+alcance del commit consolidado en [integración de entrega](docs/integracion-entrega.md).
 Sin R02_POSTGRES_ADMIN las pruebas de integración se omiten y no acreditan R05.
 El ciclo usa login real y comprueba huésped, reserva concurrente 201/409,
 check-in repetido 409, consumo, saldo pendiente 409 sin cerrar la estadía,
@@ -77,7 +110,7 @@ siguen pendientes del equipo. No se atribuyen esas tareas a Ronaldo.
 Comando probado desde la rama del PR #26, con destino nuevo:
 
 ```powershell
-./scripts/Publish-Delivery.ps1 -OutputDirectory "$env:TEMP/hotel-release-20261126"
+./scripts/Publish-Delivery.ps1 -OutputDirectory "$env:LOCALAPPDATA/HotelManagement/Delivery/jwt-20261126"
 ```
 
 Release correcto: DLL, HTML, CSS y JavaScript presentes. Para el destino usar
@@ -88,17 +121,35 @@ ASPNETCORE_ENVIRONMENT=Production y ASPNETCORE_URLS. Desde la carpeta publicada:
 dotnet HotelManagement.Api.dll
 ```
 
-Comprobación preparada (pendiente de ejecución), con DELIVERY_USERNAME y
-DELIVERY_PASSWORD externos y una cuenta ya aprovisionada:
+Comprobación ejecutada con éxito, con ConnectionStrings__DefaultConnection, Jwt__SigningKey,
+DELIVERY_USERNAME y DELIVERY_PASSWORD externos y una cuenta ya aprovisionada:
 
 ```powershell
-./scripts/Test-Delivery.ps1 -PublishedDirectory "$env:TEMP/hotel-release-20261126"
+./scripts/Test-Delivery.ps1 -PublishedDirectory "$env:LOCALAPPDATA/HotelManagement/Delivery/jwt-20261126" -RequireDemoData
 ```
 
-La revisión automática bloqueó el comando de aprovisionamiento y arranque antes
-de ejecutarlo (`blocked by policy`, sin razón adicional). No se verificaron
-Production, web publicada, login ni URL de entrega. Falta completar esos pasos
-y comprobar HTTPS/proxy y persistencia de claves Data Protection en el destino.
+Resultados: Production, web y recursos Aurora, rutas 401/404, login válido e
+inválido, PostgreSQL con datos ficticios y JWT válido tras reinicio correctos.
+Logout descarta el token del cliente; esta versión no revoca copias ya emitidas.
+Sin conexión configurada el arranque falla con el mensaje esperado. Estos
+resultados sustituyen el bloqueo de ejecución registrado anteriormente.
+
+La carpeta anterior ya está publicada; para publicar de nuevo, usar otra vacía.
+El puerto de prueba debe estar libre. Para iniciar la entrega local existente:
+
+```powershell
+./scripts/Start-LocalDelivery.ps1 -PublishedDirectory "$env:LOCALAPPDATA/HotelManagement/Delivery/jwt-20261126"
+```
+
+El lanzador usa conexión y clave JWT del entorno o de los User Secrets de
+esta PC, las pasa por entorno y fija Production con escucha solo en loopback.
+No copia secretos ni crea cuentas. El token sigue válido tras reiniciar con la
+misma clave de firma. El navegador mantiene el token solo en memoria y exige
+login al recargar la página; no hay refresh tokens. Detener con
+Ctrl+C. No iniciar otra instancia si la URL ya responde.
+
+La modalidad acordada es local. Otro destino o acceso por red requiere verificar
+HTTPS, proxy y custodia de la clave de firma en ese entorno.
 
 ## Autores y estado de revisión
 
@@ -112,9 +163,9 @@ una revisión de aceptación):
 | charly calderon / charlycalderon-oss | C06 [#37](https://github.com/Naldo-developer/HotelManagement/pull/37), C07 [#38](https://github.com/Naldo-developer/HotelManagement/pull/38), C08 [#39](https://github.com/Naldo-developer/HotelManagement/pull/39) |
 | Starqx-ym (Yadhira) | Y07 [#33](https://github.com/Naldo-developer/HotelManagement/pull/33) y mejora visual #36 |
 
-PR #26 confirmado abierto el 26/11/2026; se reutiliza su rama y preparación.
+PR #26 integrado en main (51664bc); se reutilizan sus scripts de preparación.
 R05 ya cuenta con sus dependencias integradas y suite completa aprobada.
-R06 queda parcial por arranque y entrega pendientes. R07 queda parcial por R06,
-URL verificada, integración/aceptación Y08 y reproducción por otro integrante.
+R06 queda verificado para la entrega local acordada. R07 queda parcial por
+integración/aceptación Y08 y reproducción por otro integrante.
 No se encontró evidencia versionada de esa reproducción ni un merge Y08.
 Registrar integrante, fecha, hash, comandos y resultados cuando ocurra.

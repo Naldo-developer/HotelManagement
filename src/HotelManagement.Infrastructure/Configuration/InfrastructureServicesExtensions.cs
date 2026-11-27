@@ -1,8 +1,10 @@
-﻿using HotelManagement.Domain.Repositories;
+﻿using HotelManagement.Application.Interfaces;
+using HotelManagement.Domain.Repositories;
 using HotelManagement.Infrastructure.Repositories;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using HotelManagement.Application.Security;
+using HotelManagement.Infrastructure.Persistence;
 using HotelManagement.Infrastructure.Security;
 
 namespace HotelManagement.Infrastructure.Configuration;
@@ -19,6 +21,7 @@ public static class InfrastructureServicesExtensions
         });
         
         services.AddScoped<IGuestRepository, GuestRepository>();
+        services.AddScoped<IUnitOfWork, EfUnitOfWork>();
         services.AddScoped<IUserRepository, UserRepository>();
         services.AddSingleton<ICredentialHasher, CredentialHasher>();
         services.AddScoped<IRoomRepository, RoomRepository>();

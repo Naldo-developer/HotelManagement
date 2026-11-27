@@ -2,6 +2,7 @@ using HotelManagement.Api.Configuration;
 using HotelManagement.Application.Configuration;
 using HotelManagement.Infrastructure.Configuration;
 using HotelManagement.Infrastructure.Security;
+using Microsoft.OpenApi;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -20,7 +21,21 @@ builder.Services.AddControllers();
 if (builder.Environment.IsDevelopment())
 {
     builder.Services.AddSwaggerGen(options =>
-        options.SwaggerDoc("v1", new() { Title = "HotelManagement.Api", Version = "v1" }));
+    {
+        options.SwaggerDoc("v1", new() { Title = "HotelManagement.Api", Version = "v1" });
+        options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+        {
+            Type = SecuritySchemeType.Http,
+            Scheme = "bearer",
+            BearerFormat = "JWT",
+            Description = "Inicia sesión en /api/auth/login y pega solo accessToken."
+        });
+        options.AddSecurityRequirement(document => new OpenApiSecurityRequirement
+        {
+            [new OpenApiSecuritySchemeReference("Bearer", document)] = []
+        });
+        options.OperationFilter<PublicEndpointOperationFilter>();
+    });
 }
 
 var app = builder.Build();

@@ -1,4 +1,5 @@
 using HotelManagement.Infrastructure.Configuration;
+using HotelManagement.Infrastructure.Persistence;
 using HotelManagement.Infrastructure.Repositories;
 using Microsoft.EntityFrameworkCore;
 using Npgsql;
@@ -157,12 +158,15 @@ public sealed class RoomPeriodIntegrityTests
     private static async Task InDatabase(Func<NpgsqlConnection, string, Task> test)
     {
         var database = "hotel_r04_" + Guid.NewGuid().ToString("N");
-        await using var admin = new NpgsqlConnection(Environment.GetEnvironmentVariable("R02_POSTGRES_ADMIN"));
+        var adminConnectionString = Environment.GetEnvironmentVariable("R02_POSTGRES_ADMIN");
+        await using var admin = new NpgsqlConnection(adminConnectionString);
         await admin.OpenAsync();
         await Execute(admin, $"CREATE DATABASE {database}");
         try
         {
-            var connectionString = new NpgsqlConnectionStringBuilder(admin.ConnectionString)
+            // Después de OpenAsync, ConnectionString puede ocultar la contraseña.
+            // Conservar el valor externo original para las bases aisladas.
+            var connectionString = new NpgsqlConnectionStringBuilder(adminConnectionString)
                 { Database = database, Pooling = false, SearchPath = "hotel,public" }.ConnectionString;
             await using var connection = new NpgsqlConnection(connectionString);
             await connection.OpenAsync();

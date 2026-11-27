@@ -1,6 +1,4 @@
-﻿using System.Globalization;
-using System.Security.Claims;
-using HotelManagement.Api.Authorization;
+﻿using HotelManagement.Api.Authorization;
 using HotelManagement.Application.Dtos.Stays;
 using HotelManagement.Application.UseCases.Stays.Commands;
 using HotelManagement.Application.UseCases.Stays.Queries;
@@ -19,21 +17,7 @@ public class StaysController(ISender sender) : ControllerBase
     public async Task<ActionResult<StayDto>> CheckIn(
         [FromBody] CheckInDto input)
     {
-        var userIdClaim = User.FindFirstValue(
-            ClaimTypes.NameIdentifier);
-
-        if (!long.TryParse(
-                userIdClaim,
-                NumberStyles.None,
-                CultureInfo.InvariantCulture,
-                out var userId) ||
-            userId <= 0)
-        {
-            return Problem(
-                statusCode: StatusCodes.Status401Unauthorized,
-                title: "Sesión inválida.",
-                detail: "Inicia sesión nuevamente.");
-        }
+        var userId = User.GetUserId();
 
         var result = await sender.Send(
             new CheckInCommand(input, userId),
@@ -71,12 +55,7 @@ public class StaysController(ISender sender) : ControllerBase
         [FromBody] CheckOutDto input,
         CancellationToken cancellationToken)
     {
-        var claim = User.FindFirstValue(ClaimTypes.NameIdentifier);
-
-        if (!long.TryParse(claim, out var userId))
-        {
-            return Unauthorized();
-        }
+        var userId = User.GetUserId();
 
         var stay = await sender.Send(
             new CheckOutCommand(input, userId),

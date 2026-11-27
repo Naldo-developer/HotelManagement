@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace HotelManagement.Application.DTOs.Auth;
+namespace HotelManagement.Application.Dtos.Auth;
 
 public class LoginDto
 {

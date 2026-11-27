@@ -1,7 +1,7 @@
 ﻿using HotelManagement.Application.Dtos.Maintenances;
 using HotelManagement.Domain.Entities;
 
-namespace HotelManagement.Application.UseCases.Maintenances;
+namespace HotelManagement.Application.Mappings;
 
 internal static class MaintenanceMapping
 {

@@ -1,13 +1,14 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using HotelManagement.Application.Transactions;
+using System.ComponentModel.DataAnnotations;
 using HotelManagement.Application.Dtos.Rooms;
-using HotelManagement.Application.Exceptions;
 using HotelManagement.Domain.Entities;
+using HotelManagement.Domain.Exceptions;
 using HotelManagement.Domain.Repositories;
 using MediatR;
 
 namespace HotelManagement.Application.UseCases.Rooms.Commands;
 
-public class CreateRoomCommand(CreateRoomDto input) : IRequest<RoomDto>
+public class CreateRoomCommand(CreateRoomDto input) : IRequest<RoomDto>, ITransactionalRequest
 {
     public CreateRoomDto Input { get; } = input;
 }

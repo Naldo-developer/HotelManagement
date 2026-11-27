@@ -1,8 +1,10 @@
-using HotelManagement.Domain.Entities;
+﻿using HotelManagement.Domain.Entities;
 using HotelManagement.Domain.Repositories;
-using HotelManagement.Infrastructure.Configuration; 
+using HotelManagement.Infrastructure.Configuration;
 using Microsoft.EntityFrameworkCore;
 using HotelManagement.Application.Exceptions;
+using HotelManagement.Domain.Exceptions;
+using HotelManagement.Infrastructure.Persistence;
 using Npgsql;
 
 namespace HotelManagement.Infrastructure.Repositories;
@@ -18,11 +20,11 @@ public class GuestRepository : IGuestRepository
 
     public async Task<Guest?> GetByIdAsync(long id, CancellationToken cancellationToken)
     {
-        return await _context.Guests 
+        return await _context.Guests
             .AsNoTracking()
             .FirstOrDefaultAsync(g => g.GuestId == id, cancellationToken);
     }
-    
+
 
     public async Task<IReadOnlyList<Guest>> GetAllAsync(
         string? name,

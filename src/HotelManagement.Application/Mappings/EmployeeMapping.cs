@@ -1,7 +1,7 @@
 ﻿using HotelManagement.Application.Dtos.Employees;
 using HotelManagement.Domain.Entities;
 
-namespace HotelManagement.Application.UseCases.Employees;
+namespace HotelManagement.Application.Mappings;
 
 internal static class EmployeeMapping
 {

@@ -1,4 +1,5 @@
 import { api } from '../api.js';
+import { setAccessToken } from '../auth-token.js';
 import { clearMessages, el, showError, showMessage } from '../ui.js';
 
 export function renderLogin(container, onSuccess) {
@@ -11,10 +12,17 @@ export function renderLogin(container, onSuccess) {
         el('div', { class: 'field' }, el('label', { for: 'l-pass', text: 'Contraseña' }), password),
         el('div', { class: 'actions' }, submit));
 
-    container.append(el('section', { class: 'card login-card' },
-        el('h1', { text: 'Iniciar sesión' }),
-        el('p', { class: 'muted', text: 'Ingresa con tu cuenta del hotel.' }),
-        form));
+    container.append(el('div', { class: 'login-layout' },
+        el('section', { class: 'login-story' },
+            el('span', { class: 'eyebrow', text: 'AURORA HOTEL / LIMA' }),
+            el('h1', { text: 'Una estancia. Mil detalles.' }),
+            el('p', { text: 'La hospitalidad empieza con nuestro equipo.' }),
+            el('figure', { class: 'brand-visual' }, el('img', { src: 'images/aurora-lobby.png', alt: 'Concepto del lobby de Aurora Hotel.', width: 1536, height: 1024, decoding: 'async' }))),
+        el('section', { class: 'card login-card' },
+            el('span', { class: 'eyebrow', text: 'ACCESO DEL EQUIPO' }),
+            el('h2', { text: 'Bienvenido de nuevo.' }),
+            el('p', { class: 'muted', text: 'Ingresa a tu espacio de gestión.' }), form,
+            el('p', { class: 'login-note', text: 'Acceso del equipo. Al recargar la página deberás iniciar sesión nuevamente.' }))));
 
     let saving = false;
 
@@ -38,8 +46,10 @@ export function renderLogin(container, onSuccess) {
                 username: username.value.trim(),
                 password: password.value,
             });
+            setAccessToken(user.accessToken, user.expiresAtUtc);
             password.value = '';
-            onSuccess(user);
+            const { accessToken, tokenType, expiresAtUtc, ...identity } = user;
+            onSuccess(identity);
         } catch (error) {
             showError(error); // 401: "Usuario o contraseña incorrectos."
             password.value = '';

@@ -1,15 +1,17 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using HotelManagement.Application.Transactions;
+using System.ComponentModel.DataAnnotations;
 using HotelManagement.Application.Dtos.Users;
-using HotelManagement.Application.Exceptions;
+using HotelManagement.Application.Mappings;
 using HotelManagement.Application.Security;
 using HotelManagement.Domain.Entities;
+using HotelManagement.Domain.Exceptions;
 using HotelManagement.Domain.Repositories;
 using MediatR;
 
 namespace HotelManagement.Application.UseCases.Users.Commands;
 
 public sealed class CreateUserCommand(
-    CreateUserDto input) : IRequest<UserDto>
+    CreateUserDto input) : IRequest<UserDto>, ITransactionalRequest
 {
     public CreateUserDto Input { get; } = input;
 }

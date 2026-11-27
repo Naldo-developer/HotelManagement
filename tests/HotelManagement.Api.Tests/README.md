@@ -27,6 +27,15 @@ compartido. También se puede configurar `R02_POSTGRES_ADMIN` con una conexión 
 una instancia de prueba existente cuyo usuario pueda crear y eliminar bases.
 No guardar credenciales en el repositorio.
 
+La suite también admite autenticación por contraseña en la conexión externa.
+RoomPeriodIntegrityTests conserva la cadena original al construir conexiones a
+bases aleatorias, para no perder la contraseña después de abrir la conexión
+administrativa. Esa configuración se verificó con las 50 pruebas aprobadas.
+
+El workflow de GitHub Actions levanta PostgreSQL 18 con una cuenta desechable,
+ejecuta Release y rechaza resultados con pruebas omitidas. No utiliza la base
+ni las credenciales de desarrollo de los integrantes.
+
 La prueba crea una base vacía `hotel_r02_<GUID>`, aplica los scripts 001 y 002 de
 R01 y elimina únicamente esa base en `finally`. No altera la base indicada en
 la conexión administrativa. Si falta la variable, se informa como omitida;

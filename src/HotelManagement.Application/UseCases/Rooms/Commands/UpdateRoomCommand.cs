@@ -1,12 +1,14 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using HotelManagement.Application.Transactions;
+using System.ComponentModel.DataAnnotations;
 using HotelManagement.Application.Dtos.Rooms;
 using HotelManagement.Application.Exceptions;
+using HotelManagement.Domain.Exceptions;
 using HotelManagement.Domain.Repositories;
 using MediatR;
 
 namespace HotelManagement.Application.UseCases.Rooms.Commands;
 
-public class UpdateRoomCommand(long roomId, UpdateRoomDto input) : IRequest<RoomDto>
+public class UpdateRoomCommand(long roomId, UpdateRoomDto input) : IRequest<RoomDto>, ITransactionalRequest
 {
     public long RoomId { get; } = roomId;
     public UpdateRoomDto Input { get; } = input;

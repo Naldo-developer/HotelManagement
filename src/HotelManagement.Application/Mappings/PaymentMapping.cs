@@ -1,7 +1,7 @@
 ﻿using HotelManagement.Application.Dtos.Payments;
 using HotelManagement.Domain.Entities;
 
-namespace HotelManagement.Application.UseCases.Payments;
+namespace HotelManagement.Application.Mappings;
 
 internal static class PaymentMapping
 {

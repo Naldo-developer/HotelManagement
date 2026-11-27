@@ -1,4 +1,4 @@
-namespace HotelManagement.Application.DTOs.Guests;
+namespace HotelManagement.Application.Dtos.Guests;
 
 //Respuesta con los datos de un huésped.
 public class GuestDto

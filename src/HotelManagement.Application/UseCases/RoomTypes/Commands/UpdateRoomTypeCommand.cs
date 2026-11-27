@@ -1,6 +1,9 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using HotelManagement.Application.Transactions;
+using System.ComponentModel.DataAnnotations;
 using HotelManagement.Application.Dtos.RoomTypes;
 using HotelManagement.Application.Exceptions;
+using HotelManagement.Application.Mappings;
+using HotelManagement.Domain.Exceptions;
 using HotelManagement.Domain.Repositories;
 using MediatR;
 
@@ -8,7 +11,7 @@ namespace HotelManagement.Application.UseCases.RoomTypes.Commands;
 
 public sealed class UpdateRoomTypeCommand(
     long roomTypeId,
-    UpdateRoomTypeDto input) : IRequest<RoomTypeDto>
+    UpdateRoomTypeDto input) : IRequest<RoomTypeDto>, ITransactionalRequest
 {
     public long RoomTypeId { get; } = roomTypeId;
 
