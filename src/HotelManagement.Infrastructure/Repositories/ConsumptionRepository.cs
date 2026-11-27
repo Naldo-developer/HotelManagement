@@ -39,7 +39,7 @@ public class ConsumptionRepository(HotelManagementDbContext context)
         }
 
         await using var transaction =
-            await context.Database.BeginTransactionAsync(
+            await context.Database.BeginRepositoryTransactionAsync(
                 IsolationLevel.ReadCommitted,
                 cancellationToken);
 

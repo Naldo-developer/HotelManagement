@@ -43,7 +43,7 @@ public class MaintenanceRepository(
         CancellationToken cancellationToken)
     {
         await using var transaction =
-            await context.Database.BeginTransactionAsync(
+            await context.Database.BeginRepositoryTransactionAsync(
                 IsolationLevel.ReadCommitted,
                 cancellationToken);
 
@@ -118,7 +118,7 @@ public class MaintenanceRepository(
         CancellationToken cancellationToken)
     {
         await using var transaction =
-            await context.Database.BeginTransactionAsync(
+            await context.Database.BeginRepositoryTransactionAsync(
                 IsolationLevel.ReadCommitted,
                 cancellationToken);
 

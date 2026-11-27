@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using HotelManagement.Application.Transactions;
+using System.ComponentModel.DataAnnotations;
 using HotelManagement.Application.Dtos.Consumptions;
 using HotelManagement.Domain.Exceptions;
 using HotelManagement.Domain.Repositories;
@@ -8,7 +9,7 @@ namespace HotelManagement.Application.UseCases.Consumptions.Commands;
 
 public class CreateConsumptionCommand(
     CreateConsumptionDto input,
-    long userId) : IRequest<ConsumptionDto>
+    long userId) : IRequest<ConsumptionDto>, ITransactionalRequest
 {
     public CreateConsumptionDto Input { get; } = input;
 

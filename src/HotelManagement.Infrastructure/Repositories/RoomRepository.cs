@@ -135,7 +135,7 @@ public class RoomRepository(HotelManagementDbContext context) : IRoomRepository
         CancellationToken cancellationToken)
     {
         await using var transaction =
-            await context.Database.BeginTransactionAsync(
+            await context.Database.BeginRepositoryTransactionAsync(
                 IsolationLevel.ReadCommitted,
                 cancellationToken);
 
@@ -216,7 +216,7 @@ public class RoomRepository(HotelManagementDbContext context) : IRoomRepository
         }
 
         await using var transaction =
-            await context.Database.BeginTransactionAsync(
+            await context.Database.BeginRepositoryTransactionAsync(
                 IsolationLevel.ReadCommitted,
                 cancellationToken);
 

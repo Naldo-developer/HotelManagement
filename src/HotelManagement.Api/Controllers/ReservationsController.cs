@@ -48,6 +48,14 @@ public class ReservationsController(ISender sender) : ControllerBase
             reservation);
     }
 
+    [HttpPost("with-guest")]
+    public async Task<IActionResult> CreateWithGuest([FromBody] CreateGuestReservationDto input)
+    {
+        var reservation = await sender.Send(new CreateGuestReservationCommand(input),
+            HttpContext.RequestAborted);
+        return CreatedAtAction(nameof(GetById), new { id = reservation.ReservationId }, reservation);
+    }
+
     [HttpPatch("{id:long}/cancel")]
     public async Task<IActionResult> Cancel(
         long id,

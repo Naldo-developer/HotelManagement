@@ -57,7 +57,7 @@ public class StayRepository(HotelManagementDbContext context)
         }
 
         await using var transaction =
-            await context.Database.BeginTransactionAsync(
+            await context.Database.BeginRepositoryTransactionAsync(
                 IsolationLevel.ReadCommitted,
                 cancellationToken);
 
@@ -231,7 +231,7 @@ public class StayRepository(HotelManagementDbContext context)
             CancellationToken cancellationToken)
         {
             await using var transaction =
-                await context.Database.BeginTransactionAsync(
+                await context.Database.BeginRepositoryTransactionAsync(
                     IsolationLevel.ReadCommitted,
                     cancellationToken);
 

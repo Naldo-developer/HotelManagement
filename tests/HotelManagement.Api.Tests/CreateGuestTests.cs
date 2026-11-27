@@ -78,6 +78,7 @@ public class CreateGuestTests
         var services = new ServiceCollection();
         services.AddLogging();
         services.AddApplication();
+        services.AddSingleton<HotelManagement.Application.Transactions.IUnitOfWork, FakeUnitOfWork>();
         services.AddSingleton<IGuestRepository>(repo);
         return (services.BuildServiceProvider().GetRequiredService<ISender>(), repo);
     }

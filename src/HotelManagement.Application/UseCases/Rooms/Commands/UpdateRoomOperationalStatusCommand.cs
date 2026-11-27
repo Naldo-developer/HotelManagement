@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using HotelManagement.Application.Transactions;
+using System.ComponentModel.DataAnnotations;
 using HotelManagement.Application.Dtos.Rooms;
 using HotelManagement.Domain.Exceptions;
 using HotelManagement.Domain.Repositories;
@@ -8,7 +9,7 @@ namespace HotelManagement.Application.UseCases.Rooms.Commands;
 
 public class UpdateRoomOperationalStatusCommand(
     long roomId,
-    UpdateRoomOperationalStatusDto input) : IRequest<RoomDto>
+    UpdateRoomOperationalStatusDto input) : IRequest<RoomDto>, ITransactionalRequest
 {
     public long RoomId { get; } = roomId;
     public UpdateRoomOperationalStatusDto Input { get; } = input;

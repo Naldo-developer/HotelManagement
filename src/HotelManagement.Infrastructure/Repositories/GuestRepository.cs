@@ -1,4 +1,4 @@
-using HotelManagement.Domain.Entities;
+﻿using HotelManagement.Domain.Entities;
 using HotelManagement.Domain.Repositories;
 using HotelManagement.Infrastructure.Configuration;
 using Microsoft.EntityFrameworkCore;

@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using HotelManagement.Application.Transactions;
+using System.ComponentModel.DataAnnotations;
 using HotelManagement.Application.Dtos.Stays;
 using HotelManagement.Domain.Exceptions;
 using HotelManagement.Domain.Repositories;
@@ -8,7 +9,7 @@ namespace HotelManagement.Application.UseCases.Stays.Commands;
 
 public sealed class CheckOutCommand(
     CheckOutDto input,
-    long userId) : IRequest<StayDto>
+    long userId) : IRequest<StayDto>, ITransactionalRequest
 {
     public CheckOutDto Input { get; } = input;
     public long UserId { get; } = userId;

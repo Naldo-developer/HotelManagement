@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using HotelManagement.Application.Transactions;
+using System.ComponentModel.DataAnnotations;
 using HotelManagement.Application.Dtos.Reservations;
 using HotelManagement.Domain.Entities;
 using HotelManagement.Domain.Exceptions;
@@ -8,7 +9,7 @@ using MediatR;
 namespace HotelManagement.Application.UseCases.Reservations.Commands;
 
 public class CreateReservationCommand(CreateReservationDto input)
-    : IRequest<ReservationDto>
+    : IRequest<ReservationDto>, ITransactionalRequest
 {
     public CreateReservationDto Input { get; } = input;
 }

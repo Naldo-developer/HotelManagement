@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using HotelManagement.Application.Transactions;
+using System.ComponentModel.DataAnnotations;
 using HotelManagement.Application.Dtos.Reservations;
 using HotelManagement.Domain.Exceptions;
 using HotelManagement.Domain.Repositories;
@@ -8,7 +9,7 @@ namespace HotelManagement.Application.UseCases.Reservations.Commands;
 
 public class CancelReservationCommand(
     long reservationId,
-    CancelReservationDto input) : IRequest<ReservationDto>
+    CancelReservationDto input) : IRequest<ReservationDto>, ITransactionalRequest
 {
     public long ReservationId { get; } = reservationId;
     public CancelReservationDto Input { get; } = input;

@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using HotelManagement.Application.Transactions;
+using System.ComponentModel.DataAnnotations;
 using HotelManagement.Application.Dtos.Employees;
 using HotelManagement.Application.Exceptions;
 using HotelManagement.Domain.Exceptions;
@@ -9,7 +10,7 @@ namespace HotelManagement.Application.UseCases.Employees.Commands;
 
 public sealed class UpdateEmployeeCommand(
     long employeeId,
-    UpdateEmployeeDto input) : IRequest<EmployeeDto>
+    UpdateEmployeeDto input) : IRequest<EmployeeDto>, ITransactionalRequest
 {
     public long EmployeeId { get; } = employeeId;
     public UpdateEmployeeDto Input { get; } = input;

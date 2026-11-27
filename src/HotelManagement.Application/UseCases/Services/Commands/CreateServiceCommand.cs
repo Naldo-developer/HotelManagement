@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using HotelManagement.Application.Transactions;
+using System.ComponentModel.DataAnnotations;
 using HotelManagement.Application.Dtos.Services;
 using HotelManagement.Domain.Entities;
 using HotelManagement.Domain.Exceptions;
@@ -8,7 +9,7 @@ using MediatR;
 namespace HotelManagement.Application.UseCases.Services.Commands;
 
 public sealed class CreateServiceCommand(
-    CreateServiceDto input) : IRequest<ServiceDto>
+    CreateServiceDto input) : IRequest<ServiceDto>, ITransactionalRequest
 {
     public CreateServiceDto Input { get; } = input;
 }

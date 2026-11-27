@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using HotelManagement.Application.Transactions;
+using System.ComponentModel.DataAnnotations;
 using HotelManagement.Application.Dtos.Users;
 using HotelManagement.Application.Exceptions;
 using HotelManagement.Application.Security;
@@ -10,7 +11,7 @@ namespace HotelManagement.Application.UseCases.Users.Commands;
 
 public sealed class UpdateUserCommand(
     long userId,
-    UpdateUserDto input) : IRequest<UserDto>
+    UpdateUserDto input) : IRequest<UserDto>, ITransactionalRequest
 {
     public long UserId { get; } = userId;
     public UpdateUserDto Input { get; } = input;

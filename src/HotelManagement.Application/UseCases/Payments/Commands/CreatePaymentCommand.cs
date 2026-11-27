@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using HotelManagement.Application.Transactions;
+using System.ComponentModel.DataAnnotations;
 using HotelManagement.Application.Dtos.Payments;
 using HotelManagement.Domain.Exceptions;
 using HotelManagement.Domain.Repositories;
@@ -8,7 +9,7 @@ namespace HotelManagement.Application.UseCases.Payments.Commands;
 
 public sealed class CreatePaymentCommand(
     CreatePaymentDto input,
-    long userId) : IRequest<PaymentDto>
+    long userId) : IRequest<PaymentDto>, ITransactionalRequest
 {
     public CreatePaymentDto Input { get; } = input;
     public long UserId { get; } = userId;

@@ -20,6 +20,7 @@ public static class InfrastructureServicesExtensions
         });
         
         services.AddScoped<IGuestRepository, GuestRepository>();
+        services.AddScoped<HotelManagement.Application.Transactions.IUnitOfWork, EfUnitOfWork>();
         services.AddScoped<IUserRepository, UserRepository>();
         services.AddSingleton<ICredentialHasher, CredentialHasher>();
         services.AddScoped<IRoomRepository, RoomRepository>();

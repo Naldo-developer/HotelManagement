@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using HotelManagement.Application.Transactions;
+using System.ComponentModel.DataAnnotations;
 using HotelManagement.Application.Dtos.RoomTypes;
 using HotelManagement.Application.Exceptions;
 using HotelManagement.Domain.Entities;
@@ -9,7 +10,7 @@ using MediatR;
 namespace HotelManagement.Application.UseCases.RoomTypes.Commands;
 
 public sealed class CreateRoomTypeCommand(
-    CreateRoomTypeDto input) : IRequest<RoomTypeDto>
+    CreateRoomTypeDto input) : IRequest<RoomTypeDto>, ITransactionalRequest
 {
     public CreateRoomTypeDto Input { get; } = input;
 }

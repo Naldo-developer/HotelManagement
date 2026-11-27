@@ -18,7 +18,7 @@ public class ReservationRepository(HotelManagementDbContext context)
         Reservation reservation,
         CancellationToken cancellationToken)
     {
-        await using var transaction = await context.Database.BeginTransactionAsync(
+        await using var transaction = await context.Database.BeginRepositoryTransactionAsync(
             IsolationLevel.ReadCommitted, cancellationToken);
 
         await context.Database.ExecuteSqlRawAsync(
@@ -205,7 +205,7 @@ public class ReservationRepository(HotelManagementDbContext context)
                 "El motivo es obligatorio y no debe superar los 500 caracteres.");
         }
 
-        await using var transaction = await context.Database.BeginTransactionAsync(
+        await using var transaction = await context.Database.BeginRepositoryTransactionAsync(
             IsolationLevel.ReadCommitted, cancellationToken);
 
         await context.Database.ExecuteSqlRawAsync(
