@@ -97,7 +97,15 @@ public sealed class HotelCycleHttpTests
             var guest = await guestResponse.Content.ReadFromJsonAsync<GuestDto>();
             Assert.NotNull(guest);
             var guestId = guest.Id;
-            var today = DateOnly.FromDateTime(DateTime.UtcNow);
+            // El check-in usa el día del hotel; a medianoche UTC todavía puede
+            // ser el día anterior en Lima. No usar el día del servidor de CI.
+            await using var hotelScope = app.Services.CreateAsyncScope();
+            var hotelContext = hotelScope.ServiceProvider.GetRequiredService<HotelManagementDbContext>();
+            var timezone = await hotelContext.Hotels
+                .Where(h => h.HotelId == room.HotelId)
+                .Select(h => h.Timezone).SingleAsync();
+            var today = DateOnly.FromDateTime(TimeZoneInfo.ConvertTimeFromUtc(
+                DateTime.UtcNow, TimeZoneInfo.FindSystemTimeZoneById(timezone)));
             var input = new CreateReservationDto
             {
                 RoomId = room.RoomId, PrimaryGuestId = guestId,
