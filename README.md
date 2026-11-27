@@ -53,7 +53,7 @@ ni se guarda en appsettings. Ver el comando seguro de generación en la guía JW
 
 ```powershell
 dotnet build HotelManagement.sln --nologo
-dotnet run --project src/HotelManagement.Api --launch-profile http
+dotnet run --project HotelManagement.Api --launch-profile http
 ```
 
 El perfil http configura Development en http://localhost:5075. Web `/`, salud

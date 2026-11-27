@@ -23,8 +23,8 @@ cifras de ocupación ni estados de conexión sin obtenerlos del servidor.
 
 ## Recursos
 
-- `src/HotelManagement.Api/wwwroot/images/aurora-mark.svg`: monograma vectorial.
-- `src/HotelManagement.Api/wwwroot/images/aurora-lobby.png`: imagen conceptual
+- `HotelManagement.Api/wwwroot/images/aurora-mark.svg`: monograma vectorial.
+- `HotelManagement.Api/wwwroot/images/aurora-lobby.png`: imagen conceptual
   generada con la herramienta integrada image_gen. No es una fotografía de un
   establecimiento real. Se reutiliza en portada y login; no depende de terceros.
 - Colores, tipografía y componentes: `wwwroot/css/styles.css`.

@@ -36,7 +36,7 @@ set "ConnectionStrings__DefaultConnection=Host=localhost;Port=5432;Database=hote
 Ejecutar en una sola línea, desde la raíz, en la misma ventana donde se definió la variable:
 
 ```
-dotnet ef dbcontext scaffold "Name=ConnectionStrings:DefaultConnection" Npgsql.EntityFrameworkCore.PostgreSQL --project src/HotelManagement.Infrastructure --startup-project src/HotelManagement.Api --schema hotel --context HotelManagementDbContext --context-dir Persistence --output-dir Entities --namespace HotelManagement.Domain.Entities --context-namespace HotelManagement.Infrastructure.Persistence --no-onconfiguring
+dotnet ef dbcontext scaffold "Name=ConnectionStrings:DefaultConnection" Npgsql.EntityFrameworkCore.PostgreSQL --project HotelManagement.Infrastructure --startup-project HotelManagement.Api --schema hotel --context HotelManagementDbContext --context-dir Data --output-dir Entities --namespace HotelManagement.Domain.Entities --context-namespace HotelManagement.Infrastructure.Data --no-onconfiguring
 ```
 
 Al terminar, limpiar la variable:
@@ -48,10 +48,10 @@ set ConnectionStrings__DefaultConnection=
 ## Organización de los archivos generados
 
 - Las entidades se generan en `Infrastructure/Entities` y se mueven a
-  `src/HotelManagement.Domain/Entities`. El namespace queda como
+  `HotelManagement.Domain/Entities`. El namespace queda como
   `HotelManagement.Domain.Entities`.
 - El contexto `HotelManagementDbContext` queda en
-  `src/HotelManagement.Infrastructure/Persistence`.
+  `HotelManagement.Infrastructure/Data`.
 - Se eliminó la carpeta vacía `Infrastructure/Entities`.
 
 ## Inventario real

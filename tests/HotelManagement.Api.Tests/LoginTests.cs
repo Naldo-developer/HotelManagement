@@ -1,7 +1,7 @@
-﻿using HotelManagement.Application.Configuration;
+﻿using HotelManagement.Application;
 using HotelManagement.Application.Dtos.Auth;
 using HotelManagement.Application.Exceptions;
-using HotelManagement.Application.Security;
+using HotelManagement.Application.Interfaces.Services;
 using HotelManagement.Application.UseCases.Auth.Commands;
 using HotelManagement.Domain.Entities;
 using HotelManagement.Domain.Exceptions;

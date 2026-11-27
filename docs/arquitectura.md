@@ -9,49 +9,58 @@ mantienen únicamente en memoria del cliente y expiran por defecto a los 15 minu
 
 ```text
 HotelManagement/
-├── src/
-│   ├── HotelManagement.Api/
-│   │   ├── Authorization/       Roles y políticas de acceso
-│   │   ├── Configuration/       Registro de servicios HTTP y autenticación
-│   │   ├── Controllers/         Endpoints que envían Commands y Queries
-│   │   ├── ErrorHandling/       ProblemDetails y manejo central de errores
-│   │   ├── Security/            Emisión de tokens JWT firmados
-│   │   └── wwwroot/             Interfaz Aurora: HTML, CSS, JS e imágenes
-│   ├── HotelManagement.Application/
-│   │   ├── Configuration/       AddApplication y registro de MediatR
-│   │   ├── Dtos/                Contratos agrupados por funcionalidad
-│   │   ├── Exceptions/          Errores de aplicación
-│   │   ├── Interfaces/          IUnitOfWork y Services/IAccessTokenIssuer
-│   │   ├── Mappings/            Conversión entre entidades y DTOs
-│   │   ├── Security/            Contrato del servicio de hashing
-│   │   ├── Transactions/        Behavior transaccional y marcador de comandos
-│   │   └── UseCases/            Commands, Queries y sus handlers
-│   ├── HotelManagement.Domain/
-│   │   ├── Entities/            Entidades sin dependencias de persistencia
-│   │   ├── Repositories/        Contratos de acceso a datos por entidad
-│   │   ├── Exceptions/          Conflictos y validaciones de negocio
-│   │   └── Rules/               Políticas de reservas y estadías
-│   └── HotelManagement.Infrastructure/
-│       ├── Configuration/       AddInfrastructure y registro de dependencias
-│       ├── Persistence/         HotelManagementDbContext y modelo de EF Core
-│       ├── Repositories/        Implementaciones PostgreSQL
-│       └── Security/            Hashing y aprovisionamiento demo
-├── database/                    Esquema, seed e incrementos SQL versionados
-├── tests/HotelManagement.Api.Tests/
-├── scripts/                     Publicación y verificación de entrega local
-├── .github/workflows/ci.yml      Compilación, PostgreSQL, pruebas y publicación
-└── docs/                        Arquitectura, decisiones y evidencias
+├── HotelManagement.Api/
+│   ├── Authorization/
+│   ├── Configuration/
+│   ├── Controllers/
+│   ├── Middleware/
+│   ├── Properties/
+│   ├── wwwroot/
+│   └── Program.cs
+├── HotelManagement.Application/
+│   ├── Dtos/
+│   ├── Exceptions/
+│   ├── Interfaces/
+│   │   ├── Services/
+│   │   └── IUnitOfWork.cs
+│   ├── Mappings/
+│   ├── Transactions/
+│   ├── UseCases/
+│   └── DependencyInjection.cs
+├── HotelManagement.Domain/
+│   ├── Entities/
+│   ├── Exceptions/
+│   ├── Repositories/
+│   └── Rules/
+├── HotelManagement.Infrastructure/
+│   ├── Data/
+│   │   ├── Seeders/
+│   │   ├── EfUnitOfWork.cs
+│   │   ├── HotelManagementDbContext.cs
+│   │   └── RepositoryTransaction.cs
+│   ├── Repositories/
+│   ├── Services/
+│   └── DependencyInjection.cs
+├── database/
+├── docs/
+├── scripts/
+├── tests/
+├── .github/
+├── .config/
+├── .gitignore
+├── HotelManagement.sln
+└── README.md
 ```
 
 ## Dependencias entre capas
 
 ```mermaid
 flowchart LR
-    Api --> Application
-    Api --> Infrastructure
-    Infrastructure --> Application
-    Infrastructure --> Domain
-    Application --> Domain
+  Api --> Application
+  Api --> Infrastructure
+  Infrastructure --> Application
+  Infrastructure --> Domain
+  Application --> Domain
 ```
 
 Domain permanece independiente de las otras capas, EF Core y Npgsql.
@@ -87,15 +96,18 @@ reserva demuestra la coordinación entre repositorios. Ver
 - Las excepciones de dominio y aplicación se traducen centralmente a ProblemDetails.
 - Los servicios se registran mediante las extensiones de cada capa. No crear
   archivos DependencyInjection duplicados de registros ya existentes.
-- Los archivos de pruebas pertenecen al proyecto de tests, fuera de src.
+- Los archivos de pruebas pertenecen al proyecto de tests, fuera de los proyectos de producción.
 
 ## Persistencia y configuración
 
-`Infrastructure/Persistence/HotelManagementDbContext.cs` representa el modelo EF.
+`HotelManagement.Infrastructure/Data/HotelManagementDbContext.cs` representa el modelo EF.
 El SQL de `database/` es la fuente de verdad, incluidas restricciones de exclusión
 y triggers que no están representados por completo en el modelo generado.
 Aplicar los incrementos en orden; actualmente 001–004. No se utilizan migraciones
-EF paralelas al historial SQL. Ver [scaffolding](scaffolding.md).
+EF paralelas al historial SQL. Se conserva el modelo generado mediante Scaffold
+con los ajustes de compatibilidad ya documentados; en esta reorganización solo
+cambió su ubicación y namespace, no las configuraciones de las entidades.
+Ver [scaffolding](scaffolding.md).
 
 La conexión se configura con `ConnectionStrings:DefaultConnection`, mediante
 User Secrets en Development o variables de entorno. No se versionan conexiones
@@ -120,7 +132,7 @@ manuales, pero no sustituye estas verificaciones automatizadas.
 
 ### ¿Dónde está Unit of Work y cómo usa genéricos?
 
-El contrato está en `Application/Interfaces/IUnitOfWork.cs`. Su método
+El contrato está en `HotelManagement.Application/Interfaces/IUnitOfWork.cs`. Su método
 `ExecuteAsync<T>` es genérico: conserva el tipo de resultado del caso de uso
 sin convertirlo a object ni duplicar contratos para cada DTO. La implementación
 EfUnitOfWork permanece en Infrastructure. TransactionBehavior pertenece a
@@ -140,8 +152,9 @@ controlada. Las excepciones de validación, conflicto y recurso inexistente
 se traducen a 400, 409 y 404; los errores inesperados devuelven un mensaje
 genérico y un traceId sin exponer detalles del proveedor ni secretos.
 
-El rollback lo realiza Unit of Work, no la excepción por sí sola. No se cambió
-el código de las excepciones ni GlobalExceptionHandler para esta reorganización.
+El rollback lo realiza Unit of Work, no la excepción por sí sola. No se modificó
+la lógica de las excepciones ni de GlobalExceptionHandler; este último se
+trasladó a Middleware.
 
 ### ¿Qué es wwwroot dentro de la API?
 
@@ -156,8 +169,9 @@ arquitectura hexagonal ni de integración por HTTP.
 
 Los controllers delegan la validación y decisiones de negocio a los casos de
 uso. LoginCommand comprueba credenciales, actividad y roles y solicita un token
-mediante `Interfaces/Services/IAccessTokenIssuer`. JwtTokenIssuer es el adaptador
-JWT de la API; Application no referencia ASP.NET ni el proveedor de firma.
+mediante `Interfaces/Services/IAccessTokenIssuer`. `JwtTokenIssuer` es el adaptador
+de Infrastructure que emite los tokens; Application no referencia ASP.NET ni
+el proveedor de firma.
 AccessTokenDto está en Dtos/Auth.
 
 La validez del identificador del usuario se comprueba centralmente al validar
@@ -167,21 +181,25 @@ de aplicación. AuthenticationHttpResponse traduce el resultado de login a HTTP
 HTTP. Los controllers ya no contienen if/else, análisis numérico de claims,
 decisiones de credenciales ni emisión de tokens.
 
-### Interpretación de la imagen de referencia y carpeta Security
+### Interpretación de la imagen de referencia y organización de servicios
 
 La imagen muestra responsabilidades y dirección de dependencias; no obliga
 a agregar RabbitMQ, correo o consola ni prescribe un nombre para cada carpeta.
 Los controllers son adaptadores de entrada y los repositorios EF son
 adaptadores de salida; Domain y Application forman el núcleo.
 
-La propuesta verbal de reemplazar Security por Services no especificaba qué
-contratos, implementaciones y capas debían moverse. Se conservaron las carpetas
-Security existentes según la instrucción de no ejecutar esa parte ambigua.
-El nuevo puerto IAccessTokenIssuer sí se ubica explícitamente en
-Interfaces/Services, separado de su implementación técnica.
+Los contratos de seguridad (`IAccessTokenIssuer` e `ICredentialHasher`) se
+encuentran en `HotelManagement.Application/Interfaces/Services` y sus
+implementaciones en `HotelManagement.Infrastructure/Services`, junto con
+`JwtOptions`. La API conserva la configuración de autenticación JWT y
+autorización HTTP. `DemoAccountSeeder` se ubica en `Data/Seeders`.
 
-Resultado de esta revisión: 99 pruebas .NET y 3 JavaScript aprobadas, sin fallos
-ni omisiones, con las integraciones PostgreSQL ejecutadas.
+Resultado de la reorganización del 27/11/2026: compilación Release sin errores
+ni advertencias; 99 pruebas .NET y 3 JavaScript aprobadas, sin fallos ni
+omisiones. Las integraciones se ejecutaron con PostgreSQL 18 temporal en
+loopback y el servidor temporal se detuvo correctamente al finalizar.
+La publicación y la comprobación visual de esta reorganización se verifican
+por separado.
 
 ## Verificación y CI
 
@@ -205,8 +223,8 @@ También se comprobó la publicación Release. Las pruebas de integridad conserv
 la cadena administrativa externa para crear conexiones nuevas sin perder su
 contraseña al abrir la conexión principal.
 
-La reorganización de namespaces se aplica mediante las referencias resueltas por
-Rider. La verificación de cambios funcionales y de CI se distingue de esa operación.
+La reorganización de namespaces y rutas se verificó mediante compilación y
+pruebas locales. La ejecución de CI en GitHub se verifica por separado.
 
 Referencias: [setup-dotnet](https://github.com/actions/setup-dotnet) y
 [servicios PostgreSQL de GitHub Actions](https://docs.github.com/en/actions/tutorials/use-containerized-services/create-postgresql-service-containers).

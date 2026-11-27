@@ -48,7 +48,7 @@ $bytes = New-Object byte[] 64
 $rng = [Security.Cryptography.RandomNumberGenerator]::Create()
 try { $rng.GetBytes($bytes) } finally { $rng.Dispose() }
 $key = [Convert]::ToBase64String($bytes)
-dotnet user-secrets set 'Jwt:SigningKey' $key --project src/HotelManagement.Api
+dotnet user-secrets set 'Jwt:SigningKey' $key --project HotelManagement.Api
 Remove-Variable key,bytes
 ```
 

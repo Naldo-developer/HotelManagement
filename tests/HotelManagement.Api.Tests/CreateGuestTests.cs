@@ -1,4 +1,4 @@
-﻿using HotelManagement.Application.Configuration;
+﻿using HotelManagement.Application;
 using HotelManagement.Application.Dtos.Guests;
 using HotelManagement.Application.Exceptions;
 using HotelManagement.Application.UseCases.Guests.Commands;

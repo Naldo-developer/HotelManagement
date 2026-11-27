@@ -1,4 +1,4 @@
-﻿using HotelManagement.Infrastructure.Security;
+﻿using HotelManagement.Infrastructure.Services;
 
 namespace HotelManagement.Api.Tests;
 

@@ -1,5 +1,5 @@
-using HotelManagement.Infrastructure.Configuration;
-using HotelManagement.Infrastructure.Persistence;
+using HotelManagement.Infrastructure;
+using HotelManagement.Infrastructure.Data;
 using HotelManagement.Infrastructure.Repositories;
 using Microsoft.EntityFrameworkCore;
 using Npgsql;
