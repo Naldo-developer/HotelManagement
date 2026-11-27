@@ -179,3 +179,663 @@ td a {font-weight:600;text-decoration:none}td a:hover {text-decoration:underline
 @media(max-width:1100px){.brand{font-size:21px;letter-spacing:2.4px;gap:10px}.brand small{font-size:7px;letter-spacing:2.3px}.brand>svg{width:28px;height:38px}}
 @media(max-width:800px){.brand{font-size:23px;letter-spacing:3px}.brand small{font-size:8px;letter-spacing:2.6px}.brand>svg{width:30px;height:39px}.hero-copy{padding-block:35px}.hero h1{font-size:36px}}
 @media(max-width:560px){.hero>.brand-visual{height:195px;min-height:0}.login-story .brand-visual{display:none}.brand{font-size:22px;letter-spacing:2.5px}.brand small{letter-spacing:2.5px}.footer{align-items:flex-start}.footer>span:last-child{max-width:100px;text-align:right}}
+
+/* ==================================================
+   AURORA - MÓDULOS DE GESTIÓN
+   ================================================== */
+
+.aurora-module {
+    position: relative;
+    overflow: hidden;
+    animation: aurora-enter 0.45s ease-out both;
+}
+
+.aurora-module::before {
+    content: "";
+    position: absolute;
+    inset: 0 0 auto;
+    height: 3px;
+    background: linear-gradient(
+            90deg,
+            #b49a70,
+            #e8d9bf,
+            transparent
+    );
+}
+
+.aurora-module h1 {
+    margin-top: 10px;
+    letter-spacing: -0.035em;
+}
+
+.aurora-module .eyebrow {
+    color: #9b8056;
+    font-size: 0.7rem;
+    letter-spacing: 0.16em;
+}
+
+.aurora-metrics {
+    display: grid;
+    grid-template-columns:
+        repeat(auto-fit, minmax(170px, 1fr));
+    gap: 16px;
+    margin-top: 24px;
+}
+
+.aurora-metric {
+    background: #f7f5f1;
+    border: 1px solid #e6e1d8;
+    border-radius: 8px;
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    transition:
+            transform 0.25s ease,
+            box-shadow 0.25s ease;
+}
+
+.aurora-metric:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 10px 24px #14263a0d;
+}
+
+.aurora-metric span {
+    font-size: 0.82rem;
+    color: #687381;
+}
+
+.aurora-metric strong {
+    font-size: clamp(1.4rem, 2vw, 2rem);
+    font-weight: 600;
+    color: #15273b;
+    font-variant-numeric: tabular-nums;
+}
+
+.aurora-metric.highlighted {
+    background: #15273b;
+    border-color: #15273b;
+}
+
+.aurora-metric.highlighted span {
+    color: #d1b88f;
+}
+
+.aurora-metric.highlighted strong {
+    color: #fff;
+}
+
+.aurora-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 6px 12px;
+    border-radius: 20px;
+    background: #eeeae3;
+    color: #665b4d;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+.aurora-badge.success {
+    color: #27654d;
+    background: #e4f1e9;
+}
+
+.aurora-module input,
+.aurora-module select,
+.aurora-module textarea {
+    transition:
+            border-color 0.2s ease,
+            box-shadow 0.2s ease;
+}
+
+.aurora-module input:focus,
+.aurora-module select:focus,
+.aurora-module textarea:focus {
+    outline: none;
+    border-color: #b49a70;
+    box-shadow: 0 0 0 3px #b49a7020;
+}
+
+.results > .card {
+    margin-top: 20px;
+    animation: aurora-enter 0.35s ease-out both;
+}
+
+@keyframes aurora-enter {
+    from {
+        opacity: 0;
+        transform: translateY(9px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@media (max-width: 600px) {
+    .aurora-metrics {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+    }
+
+    .aurora-metric {
+        padding: 16px;
+    }
+
+    .aurora-module .form-actions {
+        flex-wrap: wrap;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .aurora-module,
+    .results > .card {
+        animation: none;
+    }
+
+    .aurora-metric {
+        transition: none;
+    }
+}
+
+/* ==================================================
+   AURORA - CATÁLOGOS Y MANTENIMIENTO
+   ================================================== */
+
+[hidden] {
+    display: none !important;
+}
+
+#nav {
+    overflow-y: auto;
+    min-height: 0;
+    scrollbar-width: thin;
+    scrollbar-color: #c6c3bc transparent;
+}
+
+#nav a {
+    transition:
+            background-color 0.2s ease,
+            color 0.2s ease,
+            transform 0.2s ease;
+}
+
+#nav a:hover {
+    transform: translateX(2px);
+}
+
+#nav a[aria-current="page"] {
+    font-weight: 600;
+}
+
+.aurora-module + .card {
+    margin-top: 20px;
+}
+
+.aurora-module .field > span {
+    color: #526274;
+    font-size: 0.82rem;
+    font-weight: 500;
+}
+
+.aurora-module textarea {
+    min-height: 100px;
+    resize: vertical;
+}
+
+.aurora-module .form-actions {
+    padding-top: 12px;
+    border-top: 1px solid #ebe7df;
+}
+
+.aurora-module .form-actions .btn {
+    transition:
+            transform 0.2s ease,
+            box-shadow 0.2s ease;
+}
+
+.aurora-module .btn:not(:disabled):hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 15px #14263a12;
+}
+
+.aurora-module .btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.results table tbody tr {
+    transition: background-color 0.15s ease;
+}
+
+.results table tbody tr:hover {
+    background-color: #f8f6f2;
+}
+
+.results table th {
+    font-size: 0.72rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+}
+
+.results table td {
+    vertical-align: middle;
+}
+
+.results .card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+@media (max-width: 700px) {
+    .aurora-module .form-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .aurora-module .form-actions .btn {
+        flex: 1 1 auto;
+    }
+
+    .results .table-wrap {
+        overflow-x: auto;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    #nav a,
+    .aurora-module .btn,
+    .results table tbody tr {
+        transition: none;
+        transform: none;
+    }
+}
+
+/* ==================================================
+   AURORA - DASHBOARD Y GESTIÓN DE ACCESOS
+   ================================================== */
+
+.aurora-dashboard {
+    display: flex;
+    flex-direction: column;
+    gap: 28px;
+    animation: aurora-enter 0.45s ease-out both;
+}
+
+.aurora-dashboard-metrics {
+    display: grid;
+    grid-template-columns:
+        repeat(auto-fit, minmax(180px, 1fr));
+    gap: 16px;
+}
+
+.aurora-dashboard-metric {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    min-width: 0;
+    padding: 24px;
+    background: #fff;
+    border: 1px solid #e3dfd7;
+    border-radius: 6px;
+    color: #15273b;
+    text-decoration: none;
+    transition:
+            transform 0.25s ease,
+            box-shadow 0.25s ease,
+            border-color 0.25s ease;
+}
+
+.aurora-dashboard-metric::before {
+    content: "";
+    position: absolute;
+    left: 24px;
+    top: 0;
+    width: 30px;
+    height: 3px;
+    background: #b49a70;
+}
+
+.aurora-dashboard-metric:hover {
+    transform: translateY(-4px);
+    border-color: #c5af88;
+    box-shadow: 0 12px 28px #15273b0c;
+}
+
+.aurora-dashboard-metric-label {
+    font-size: 0.83rem;
+    color: #687381;
+    font-weight: 500;
+}
+
+.aurora-dashboard-metric strong {
+    font-size: clamp(1.6rem, 2.5vw, 2.5rem);
+    color: #15273b;
+    letter-spacing: -0.04em;
+    line-height: 1.2;
+    font-variant-numeric: tabular-nums;
+}
+
+.aurora-dashboard-metric small {
+    color: #8c7855;
+    font-size: 0.75rem;
+}
+
+.aurora-shortcuts {
+    display: grid;
+    grid-template-columns:
+        repeat(auto-fit, minmax(270px, 1fr));
+    gap: 14px;
+}
+
+.aurora-shortcut {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 22px;
+    background: #fff;
+    border: 1px solid #e3dfd7;
+    border-radius: 6px;
+    text-decoration: none;
+    color: #15273b;
+    transition:
+            transform 0.25s ease,
+            border-color 0.25s ease,
+            box-shadow 0.25s ease;
+}
+
+.aurora-shortcut:hover {
+    transform: translateY(-3px);
+    border-color: #c5af88;
+    box-shadow: 0 10px 25px #15273b0b;
+}
+
+.aurora-shortcut-icon {
+    display: grid;
+    place-items: center;
+    width: 46px;
+    height: 46px;
+    flex: 0 0 46px;
+    background: #f2eee5;
+    color: #9d8257;
+    font-size: 0.85rem;
+    font-weight: 600;
+    border-radius: 4px;
+}
+
+.aurora-shortcut h3 {
+    margin: 0 0 5px;
+    font-size: 0.98rem;
+    color: #15273b;
+}
+
+.aurora-shortcut p {
+    margin: 0;
+    font-size: 0.79rem;
+    line-height: 1.6;
+}
+
+.aurora-shortcut-arrow {
+    margin-left: auto;
+    color: #a58b60;
+    transition: transform 0.2s ease;
+}
+
+.aurora-shortcut:hover .aurora-shortcut-arrow {
+    transform: translate(2px, -2px);
+}
+
+.aurora-dashboard-activity {
+    display: grid;
+    grid-template-columns:
+        repeat(auto-fit, minmax(min(100%, 400px), 1fr));
+    align-items: start;
+    gap: 20px;
+}
+
+.aurora-dashboard-activity:empty {
+    display: none;
+}
+
+.aurora-activity-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 18px;
+    color: #15273b;
+    padding: 17px 0;
+    border-bottom: 1px solid #ede9e1;
+    text-decoration: none;
+    transition: background-color 0.2s ease;
+}
+
+.aurora-activity-row:last-child {
+    border-bottom: none;
+}
+
+.aurora-activity-row:hover {
+    background-color: #f9f7f3;
+}
+
+.aurora-activity-row p {
+    margin: 5px 0 0;
+    font-size: 0.78rem;
+}
+
+.aurora-role-grid {
+    display: grid;
+    grid-template-columns:
+        repeat(auto-fit, minmax(220px, 1fr));
+    gap: 14px;
+    margin: 18px 0;
+}
+
+.aurora-role-option {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    background: #f7f5f0;
+    border: 1px solid #e3dfd7;
+    padding: 18px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition:
+            background-color 0.2s ease,
+            border-color 0.2s ease;
+}
+
+.aurora-role-option:has(input:checked) {
+    background: #f0ebe0;
+    border-color: #b49a70;
+}
+
+.aurora-role-option input[type="checkbox"] {
+    width: 17px;
+    height: 17px;
+    min-width: 17px;
+    margin: 3px 0 0;
+    accent-color: #15273b;
+}
+
+.aurora-role-option strong {
+    display: block;
+    margin-bottom: 5px;
+    color: #15273b;
+    font-size: 0.85rem;
+}
+
+.aurora-role-option small {
+    display: block;
+    font-size: 0.75rem;
+    line-height: 1.6;
+}
+
+.aurora-full-width {
+    grid-column: 1 / -1;
+}
+
+.aurora-badge-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+@media (max-width: 700px) {
+    .aurora-dashboard {
+        gap: 20px;
+    }
+
+    .aurora-dashboard-metrics {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+    }
+
+    .aurora-dashboard-metric {
+        padding: 18px;
+    }
+
+    .aurora-dashboard-metric-label {
+        font-size: 0.73rem;
+    }
+
+    .aurora-shortcuts {
+        grid-template-columns: 1fr;
+    }
+
+    .aurora-role-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .aurora-activity-row {
+        flex-wrap: wrap;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .aurora-dashboard {
+        animation: none;
+    }
+
+    .aurora-dashboard-metric,
+    .aurora-shortcut,
+    .aurora-shortcut-arrow,
+    .aurora-role-option {
+        transition: none;
+        transform: none;
+    }
+}
+
+/* ==================================================
+   AURORA - CONTROL OPERATIVO Y PULIDO FINAL
+   ================================================== */
+
+.aurora-current-state {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+    padding: 18px 22px;
+    margin: 20px 0;
+    background: #f3f0e9;
+    border-left: 3px solid #b49a70;
+    border-radius: 4px;
+}
+
+.aurora-current-state span {
+    font-size: 0.83rem;
+    color: #687381;
+}
+
+.aurora-current-state strong {
+    color: #15273b;
+    font-size: 0.95rem;
+}
+
+.actions,
+.form-actions {
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.btn {
+    transition:
+            background-color 0.2s ease,
+            transform 0.2s ease,
+            box-shadow 0.2s ease;
+}
+
+.btn:not(:disabled):active {
+    transform: scale(0.98);
+}
+
+#view > .card {
+    animation: aurora-enter 0.35s ease-out both;
+}
+
+#view > .card + .card {
+    margin-top: 20px;
+}
+
+.table-wrap {
+    scrollbar-width: thin;
+    scrollbar-color: #c6c3bc transparent;
+}
+
+.table-wrap td:last-child {
+    min-width: 100px;
+}
+
+.table-wrap td a {
+    text-underline-offset: 3px;
+}
+
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+button:focus-visible,
+a:focus-visible {
+    outline: 2px solid #b49a70;
+    outline-offset: 3px;
+}
+
+.aurora-dashboard-metric,
+.aurora-shortcut,
+.aurora-activity-row {
+    -webkit-tap-highlight-color: transparent;
+}
+
+@media (max-width: 700px) {
+    .aurora-current-state {
+        padding: 15px;
+    }
+
+    .actions,
+    .form-actions {
+        flex-wrap: wrap;
+    }
+
+    .actions .btn {
+        flex: 1 1 auto;
+        text-align: center;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    #view > .card {
+        animation: none;
+    }
+
+    .btn {
+        transition: none;
+    }
+
+    .btn:not(:disabled):active {
+        transform: none;
+    }
+}

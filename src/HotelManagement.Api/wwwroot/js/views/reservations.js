@@ -2,6 +2,7 @@ import { api } from '../api.js';
 import { getHotels, hotelName, resolveNames, RESERVATION_STATUSES, typeName } from '../catalogs.js';
 import { formatDate, formatMoney, nightsBetween } from '../format.js';
 import { clearMessages, el, setSelectOptions, showError, showMessage } from '../ui.js';
+import { canManagePayments } from '../permissions.js';
 
 const PAGE_SIZES = [10, 20, 50];
 const CANCELLABLE = ['PENDING', 'CONFIRMED'];
@@ -201,14 +202,42 @@ function renderResults(ui, reservations) {
     ui.next.disabled = reservations.length < state.filters.pageSize;
 }
 
+
 function actionLinks(reservation) {
-    const links = [el('a', { href: `#reservas/${reservation.reservationId}`, text: 'Ver' })];
-    if (CANCELLABLE.includes(reservation.status)) {
+    const id = reservation.reservationId;
+
+    const links = [
+        el('a', {
+            href: `#reservas/${id}`,
+            text: 'Ver'
+        })
+    ];
+
+    function addLink(href, text) {
         links.push(document.createTextNode(' · '));
-        links.push(el('a', { href: `#reservas/${reservation.reservationId}/cancelar`, text: 'Cancelar' }));
+        links.push(el('a', { href, text }));
     }
+
+    if (CANCELLABLE.includes(reservation.status)) {
+        addLink(`#estadias/${id}`, 'Check-in');
+        addLink(`#reservas/${id}/cancelar`, 'Cancelar');
+    }
+
+    if (reservation.status === 'CHECKED_IN') {
+        addLink(`#estadias/${id}`, 'Estadía');
+    }
+
+    if (
+        canManagePayments() &&
+        ['PENDING', 'CONFIRMED', 'CHECKED_IN', 'COMPLETED']
+            .includes(reservation.status)
+    ) {
+        addLink(`#pagos/${id}`, 'Pagos');
+    }
+
     return links;
 }
+
 
 // -------------------------------------------------------------- DETALLE
 
@@ -242,6 +271,7 @@ export async function renderReservationDetail(container, rawId, openCancel = fal
             : `ID ${reservation.roomId}`;
 
         const rows = [
+            ['ID de reserva', String(reservation.reservationId)],
             ['Código de confirmación', reservation.confirmationCode],
             ['Estado', statusBadge(reservation.status)],
             ['Habitación', roomText],
@@ -263,9 +293,51 @@ export async function renderReservationDetail(container, rawId, openCancel = fal
         const details = el('dl', { class: 'details' },
             ...rows.flatMap(([term, value]) => [el('dt', { text: term }), el('dd', {}, value)]));
 
+
         const actions = el('div', { class: 'actions' }, back);
+
+        const reservationId = reservation.reservationId;
+
+        const canOpenStay = [
+            'PENDING',
+            'CONFIRMED',
+            'CHECKED_IN',
+            'COMPLETED'
+        ].includes(reservation.status);
+
+        if (canOpenStay) {
+            const stayLabel = [
+                'PENDING',
+                'CONFIRMED'
+            ].includes(reservation.status)
+                ? 'Gestionar check-in'
+                : 'Consultar estadía';
+
+            actions.append(
+                el('a', {
+                    href: `#estadias/${reservationId}`,
+                    class: 'btn',
+                    text: stayLabel
+                })
+            );
+        }
+
+        if (
+            canManagePayments() &&
+            canOpenStay
+        ) {
+            actions.append(
+                el('a', {
+                    href: `#pagos/${reservationId}`,
+                    class: 'btn secondary',
+                    text: 'Consultar pagos y saldo'
+                })
+            );
+        }
+
         status.replaceWith(details);
         card.append(actions);
+
 
         if (CANCELLABLE.includes(reservation.status)) {
             const cancelButton = el('button', { type: 'button', class: 'btn danger', text: 'Cancelar reserva' });

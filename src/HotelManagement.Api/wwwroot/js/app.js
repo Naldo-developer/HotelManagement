@@ -8,11 +8,30 @@ import { renderGuestDetail, renderGuestList } from './views/guests.js';
 import { renderGuestForm } from './views/guest-form.js';
 import { renderReservationDetail, renderReservationList } from './views/reservations.js';
 import { renderReservationForm } from './views/reservation-form.js';
+import {
+    PERMISSIONS,
+    canManageConfiguration,
+    canManageOperations,
+    getRoleLabels
+} from './permissions.js';
+import { renderStays } from './views/stays.js';
+import { renderConsumptions } from './views/consumptions.js';
+import { renderPayments } from './views/payments.js';
+import { renderMaintenance } from './views/maintenance.js';
+import { renderHotels } from './views/hotels.js';
+import { renderRoomTypes } from './views/room-types.js';
+import { renderServices } from './views/services.js';
+import { renderEmployees } from './views/employees.js';
+import { renderUsers } from './views/users.js';
+import { renderDashboard } from './views/dashboard.js';
 
 // Cada pantalla se registra aquí. Si una vista define "roles" (códigos de rol),
 // solo la ven y la abren los usuarios que tengan alguno de ellos.
 const views = {
-    inicio: { title: 'Inicio', render: renderHome },
+    inicio: {
+        title: 'Inicio',
+        render: renderDashboard
+    },
     habitaciones: {
         title: 'Habitaciones',
         render: (container, param, action) => {
@@ -29,6 +48,7 @@ const views = {
     },
     huespedes: {
         title: 'Huéspedes',
+        roles: PERMISSIONS.OPERATIONS,
         render: (container, param, action) => {
             if (param === 'nuevo') {
                 renderGuestForm(container);
@@ -43,6 +63,7 @@ const views = {
     },
     reservas: {
         title: 'Reservas',
+        roles: PERMISSIONS.OPERATIONS,
         render: (container, param, action) => {
             if (param === 'nueva') {
                 renderReservationForm(container);
@@ -52,6 +73,57 @@ const views = {
                 renderReservationList(container);
             }
         },
+    },
+    estadias: {
+        title: 'Estadías',
+        roles: PERMISSIONS.OPERATIONS,
+        render: renderStays
+    },
+
+    consumos: {
+        title: 'Consumos',
+        roles: PERMISSIONS.OPERATIONS,
+        render: renderConsumptions
+    },
+
+    pagos: {
+        title: 'Pagos',
+        roles: PERMISSIONS.FINANCIAL,
+        render: renderPayments
+    },
+    mantenimiento: {
+        title: 'Mantenimiento',
+        roles: PERMISSIONS.MAINTENANCE,
+        render: renderMaintenance
+    },
+
+    hoteles: {
+        title: 'Hoteles',
+        roles: PERMISSIONS.CONFIGURATION,
+        render: renderHotels
+    },
+
+    'tipos-habitacion': {
+        title: 'Tipos de habitación',
+        roles: PERMISSIONS.CONFIGURATION,
+        render: renderRoomTypes
+    },
+
+    servicios: {
+        title: 'Servicios',
+        roles: PERMISSIONS.OPERATIONS,
+        render: renderServices
+    },
+    empleados: {
+        title: 'Empleados',
+        roles: PERMISSIONS.CONFIGURATION,
+        render: renderEmployees
+    },
+
+    usuarios: {
+        title: 'Usuarios',
+        roles: PERMISSIONS.CONFIGURATION,
+        render: renderUsers
     },
 };
 
@@ -99,7 +171,7 @@ function renderSessionBar() {
     logoutButton.addEventListener('click', onLogout);
 
     bar.append(el('span', { class: 'avatar', text: (user.fullName || user.username).slice(0, 1).toUpperCase(), 'aria-hidden': 'true' }),
-        el('div', { class: 'session-person' }, el('strong', { text: user.fullName || user.username }), el('small', { text: user.roles.join(' · ') || 'Mi cuenta' })), logoutButton);
+        el('div', { class: 'session-person' }, el('strong', { text: user.fullName || user.username }), el('small', { text: getRoleLabels(user).join(' · ') || 'Mi cuenta' })), logoutButton);
 }
 
 // ---------------------------------------------------------------- sesión
@@ -170,7 +242,14 @@ function renderRoute() {
     document.title = `${view.title} · Aurora Hotel`;
     container.replaceChildren();
 
-    if (!hasAnyRole(getUser(), view.roles)) {
+    const requiresConfiguration =
+        name === 'habitaciones' &&
+        (param === 'nueva' || action === 'editar');
+
+    if (
+        !hasAnyRole(getUser(), view.roles) ||
+        (requiresConfiguration && !canManageConfiguration())
+    ) {
         container.append(el('section', { class: 'card' },
             el('h1', { text: 'Acceso restringido' }),
             el('p', { class: 'muted', text: 'Tu cuenta no tiene permiso para ver esta sección.' }),
@@ -191,6 +270,85 @@ const TILES = [
         ['M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2', 'M16 7a4 4 0 1 1-8 0 4 4 0 0 1 8 0z']],
     ['habitaciones', 'Habitaciones', 'Consulta cada habitación, su tipo y su estado.',
         ['M2 20v-8a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v8', 'M4 10V6a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v4', 'M2 18h20']],
+    ['estadias', 'Estadías',
+        'Gestiona entradas y salidas de los huéspedes.',
+        [
+            'M3 21h18',
+            'M6 21V3h12v18',
+            'M14 12h.01'
+        ]
+    ],
+
+    ['consumos', 'Consumos',
+        'Registra los servicios utilizados durante la estancia.',
+        [
+            'M4 3h16v18l-4-2-4 2-4-2-4 2z',
+            'M8 8h8',
+            'M8 13h8'
+        ]
+    ],
+
+    ['pagos', 'Pagos',
+        'Administra cobros, saldos e historial financiero.',
+        [
+            'M3 5h18v14H3z',
+            'M3 10h18',
+            'M7 15h4'
+        ]
+    ],
+    ['mantenimiento', 'Mantenimiento',
+        'Gestiona el cuidado y conservación de las instalaciones.',
+        [
+            'M14 6l4 4',
+            'M3 17l9-9 4 4-9 9H3z',
+            'M14 6l3-3 4 4-3 3'
+        ]
+    ],
+
+    ['hoteles', 'Hoteles',
+        'Administra los establecimientos y su configuración.',
+        [
+            'M4 21V3h16v18',
+            'M2 21h20',
+            'M8 7h2 M14 7h2',
+            'M8 11h2 M14 11h2',
+            'M10 21v-6h4v6'
+        ]
+    ],
+
+    ['tipos-habitacion', 'Tipos de habitación',
+        'Configura categorías, capacidades y tarifas.',
+        [
+            'M12 2l10 5-10 5L2 7z',
+            'M2 12l10 5 10-5',
+            'M2 17l10 5 10-5'
+        ]
+    ],
+
+    ['servicios', 'Servicios',
+        'Consulta el catálogo de experiencias para huéspedes.',
+        [
+            'M3 17h18',
+            'M5 17a7 7 0 0 1 14 0',
+            'M12 7V5',
+            'M2 20h20'
+        ]
+    ],
+    ['empleados', 'Empleados',
+        'Administra el equipo de trabajo.',
+        [
+            'M16 7a4 4 0 1 1-8 0 4 4 0 0 1 8 0z',
+            'M4 21v-3a6 6 0 0 1 6-6h4a6 6 0 0 1 6 6v3'
+        ]
+    ],
+
+    ['usuarios', 'Usuarios',
+        'Gestiona cuentas y permisos.',
+        [
+            'M12 22s8-4 8-11V5l-8-3-8 3v6c0 7 8 11 8 11z',
+            'M9 12l2 2 4-4'
+        ]
+    ],
 ];
 
 function icon(paths) {
@@ -210,61 +368,6 @@ function icon(paths) {
         svg.append(path);
     });
     return svg;
-}
-
-function greeting() {
-    const hour = new Date().getHours();
-    if (hour < 12) {
-        return 'Buenos días';
-    }
-    return hour < 19 ? 'Buenas tardes' : 'Buenas noches';
-}
-
-function renderHome(container) {
-    const user = getUser();
-    const name = (user?.fullName || user?.username || '').split(' ')[0];
-
-    const hero = el('section', { class: 'hero' },
-        el('div', { class: 'hero-copy' },
-            el('span', { class: 'eyebrow', text: 'BIENVENIDO A AURORA' }),
-            el('h1', { text: name ? `${greeting()}, ${name}.` : `${greeting()}.` }),
-            el('p', { text: 'Cada llegada merece nuestra mejor versión. Prepara el día desde aquí.' }),
-            el('a', { href: '#reservas/nueva', class: 'btn hero-cta', text: 'Crear una reserva ↗' })),
-        el('figure', { class: 'brand-visual' },
-            el('img', { src: 'images/aurora-lobby.png', alt: 'Concepto de interior Aurora: madera, piedra y tapicería azul noche.', width: 1536, height: 1024, decoding: 'async' }),
-            el('figcaption', {}, el('span', { text: 'AURORA' }), el('span', { text: 'EL ARTE DE RECIBIR' }))));
-
-    const tiles = el('div', { class: 'tiles' },
-        ...TILES
-            .filter(([key]) => hasAnyRole(user, views[key].roles))
-            .map(([key, title, text, paths]) => el('a', { href: `#${key}`, class: 'tile' },
-                el('div', { class: 'tile-top' }, el('span', { class: 'tile-icon' }, icon(paths)), el('span', { class: 'tile-arrow', text: '↗', 'aria-hidden': 'true' })),
-                el('h2', { text: title }),
-                el('p', { text }))));
-
-    const healthButton = el('button', { type: 'button', class: 'btn secondary', text: 'Comprobar conexión' });
-    healthButton.addEventListener('click', () => run(healthButton, async () => {
-        await api.get('/api/health');
-        showMessage('La conexión con el servidor funciona correctamente.', 'success');
-    }));
-
-    const status = el('section', { class: 'card status-card' },
-        el('div', { class: 'status-copy' }, el('span', { class: 'connection-symbol', text: '↔', 'aria-hidden': 'true' }), el('div', {}, el('h2', { text: 'Conexión con el hotel' }), el('p', { class: 'muted', text: 'Verifica la respuesta del servidor.' }))), healthButton);
-
-    const sectionHeading = el('div', { class: 'section-heading' }, el('div', {}, el('span', { class: 'eyebrow', text: 'LA RECEPCIÓN' }), el('h2', { text: 'Lo que sigue en tu día' })), el('span', { class: 'muted', text: 'Selecciona un área para continuar' }));
-    container.append(hero, sectionHeading, tiles, status);
-}
-
-// Ejecuta una acción, evita doble clic y muestra el error de la API de forma legible.
-async function run(button, action) {
-    button.disabled = true;
-    try {
-        await action();
-    } catch (error) {
-        showError(error);
-    } finally {
-        button.disabled = false;
-    }
 }
 
 // ---------------------------------------------------------------- arranque

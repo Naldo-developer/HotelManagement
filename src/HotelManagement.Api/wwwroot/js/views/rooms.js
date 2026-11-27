@@ -1,6 +1,9 @@
 import { api } from '../api.js';
 import { getHotels, getRoomTypes, hotelName, resolveNames, ROOM_STATUSES, typeName } from '../catalogs.js';
 import { el, setSelectOptions, showError, showMessage } from '../ui.js';
+import {
+    canManageConfiguration
+} from '../permissions.js';
 
 const PAGE_SIZES = [10, 20, 50, 100];
 
@@ -51,7 +54,13 @@ export function renderRoomList(container) {
     const card = el('section', { class: 'card' },
         el('div', { class: 'card-header' },
             el('h1', { text: 'Habitaciones' }),
-            el('a', { href: '#habitaciones/nueva', class: 'btn', text: '+ Nueva habitación' })),
+            canManageConfiguration()
+                ? el('a', {
+                    href: '#habitaciones/nueva',
+                    class: 'btn',
+                    text: '+ Nueva habitación'
+                })
+                : ''),
         form,
         ui.results,
         ui.pagination);
@@ -251,7 +260,17 @@ export async function renderRoomDetail(container, rawId) {
         const edit = el('a', { href: `#habitaciones/${room.roomId}/editar`, class: 'btn', text: 'Editar' });
 
         status.replaceWith(details);
-        card.append(el('div', { class: 'actions' }, back, edit));
+        card.append(
+            el('div', { class: 'actions' },
+                back,
+                ...(canManageConfiguration() ? [edit] : [])
+            )
+        );
+        if (canManageConfiguration()) {
+            container.append(
+                buildOperationalStatusForm(room, container)
+            );
+        }
     } catch (error) {
         if (!card.isConnected) {
             return;
@@ -260,4 +279,135 @@ export async function renderRoomDetail(container, rawId) {
         card.append(el('div', { class: 'actions' }, back));
         showError(error); // un 404 muestra el mensaje de la API
     }
+}
+
+function buildOperationalStatusForm(room, container) {
+    const statusSelect = el('select', {
+            id: 'operational-status',
+            required: true
+        },
+        ...Object.entries(ROOM_STATUSES).map(([value, text]) =>
+            el('option', { value, text })
+        )
+    );
+
+    statusSelect.value = room.operationalStatus;
+
+    const saveButton = el('button', {
+        type: 'submit',
+        class: 'btn',
+        text: 'Actualizar estado',
+        disabled: true
+    });
+
+    let saving = false;
+
+    const form = el('form', { class: 'form-grid' },
+        el('div', { class: 'field' },
+            el('label', {
+                for: 'operational-status',
+                text: 'Nuevo estado operativo'
+            }),
+            statusSelect
+        ),
+        el('div', { class: 'form-actions' },
+            saveButton
+        )
+    );
+
+    const panel = el('section', {
+            class: 'card aurora-module'
+        },
+        el('span', {
+            class: 'eyebrow',
+            text: 'CONTROL OPERATIVO'
+        }),
+        el('h2', {
+            text: 'Estado de la habitación'
+        }),
+        el('p', {
+            class: 'muted',
+            text:
+                'Actualiza el estado operativo de la habitación. ' +
+                'La disponibilidad también depende de sus reservas y mantenimientos.'
+        }),
+        el('div', { class: 'aurora-current-state' },
+            el('span', {
+                text: 'Estado actual'
+            }),
+            el('strong', {
+                text: ROOM_STATUSES[room.operationalStatus]
+                    || room.operationalStatus
+            })
+        ),
+        form
+    );
+
+    statusSelect.addEventListener('change', () => {
+        saveButton.disabled =
+            saving ||
+            statusSelect.value === room.operationalStatus;
+    });
+
+    form.addEventListener('submit', async event => {
+        event.preventDefault();
+
+        if (saving || saveButton.disabled) return;
+
+        const operationalStatus = statusSelect.value;
+
+        if (!Object.hasOwn(ROOM_STATUSES, operationalStatus)) {
+            showMessage('Selecciona un estado válido.', 'error');
+            return;
+        }
+
+        const label = ROOM_STATUSES[operationalStatus];
+
+        if (!window.confirm(
+            `¿Cambiar el estado de la habitación ${room.roomNumber} a "${label}"?`
+        )) {
+            return;
+        }
+
+        saving = true;
+        statusSelect.disabled = true;
+        saveButton.disabled = true;
+        saveButton.textContent = 'Actualizando...';
+
+        try {
+            await api.patch(
+                `/api/rooms/${room.roomId}/operational-status`,
+                { operationalStatus }
+            );
+
+            if (!panel.isConnected) return;
+
+            container.replaceChildren();
+
+            await renderRoomDetail(
+                container,
+                String(room.roomId)
+            );
+
+            if (container.isConnected) {
+                showMessage(
+                    'Estado operativo actualizado correctamente.',
+                    'success'
+                );
+            }
+        } catch (error) {
+            if (panel.isConnected) {
+                showError(error);
+            }
+        } finally {
+            saving = false;
+            statusSelect.disabled = false;
+            saveButton.textContent = 'Actualizar estado';
+
+            saveButton.disabled =
+                statusSelect.value === room.operationalStatus;
+        }
+    });
+
+    return panel;
 }
