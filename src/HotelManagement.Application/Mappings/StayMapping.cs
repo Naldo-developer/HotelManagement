@@ -1,7 +1,7 @@
 ﻿using HotelManagement.Application.Dtos.Stays;
 using HotelManagement.Domain.Entities;
 
-namespace HotelManagement.Application.UseCases.Stays;
+namespace HotelManagement.Application.Mappings;
 
 internal static class StayMapping
 {

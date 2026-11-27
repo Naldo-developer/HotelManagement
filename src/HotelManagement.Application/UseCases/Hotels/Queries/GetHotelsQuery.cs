@@ -1,4 +1,5 @@
 ﻿using HotelManagement.Application.Dtos.Hotels;
+using HotelManagement.Application.Mappings;
 using HotelManagement.Domain.Repositories;
 using MediatR;
 

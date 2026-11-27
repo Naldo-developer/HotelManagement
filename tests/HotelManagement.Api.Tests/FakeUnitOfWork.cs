@@ -1,3 +1,4 @@
+using HotelManagement.Application.Interfaces;
 using HotelManagement.Application.Transactions;
 
 namespace HotelManagement.Api.Tests;

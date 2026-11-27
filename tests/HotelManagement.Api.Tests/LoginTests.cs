@@ -26,6 +26,9 @@ public class LoginTests
         Assert.Equal(1, result.UserId);
         Assert.Equal("Rosa Demo", result.FullName);
         Assert.Equal(["RECEPTION"], result.Roles);
+        Assert.Equal("token-exclusivo-de-prueba", result.AccessToken);
+        Assert.Equal("Bearer", result.TokenType);
+        Assert.True(result.ExpiresAtUtc > DateTimeOffset.UtcNow);
         Assert.Equal([1L], repo.LoginsRecorded);
     }
 
@@ -84,6 +87,7 @@ public class LoginTests
         var services = new ServiceCollection();
         services.AddLogging();
         services.AddApplication();
+        services.AddSingleton<HotelManagement.Application.Interfaces.Services.IAccessTokenIssuer, FakeAccessTokenIssuer>();
         services.AddSingleton<IUserRepository>(repo);
         services.AddSingleton<ICredentialHasher>(new FakeCredentialHasher());
         return (services.BuildServiceProvider().GetRequiredService<ISender>(), repo);

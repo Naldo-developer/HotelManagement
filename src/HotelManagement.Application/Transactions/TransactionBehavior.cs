@@ -1,3 +1,4 @@
+using HotelManagement.Application.Interfaces;
 using MediatR;
 
 namespace HotelManagement.Application.Transactions;

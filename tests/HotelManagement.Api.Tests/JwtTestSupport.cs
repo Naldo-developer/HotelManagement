@@ -29,7 +29,7 @@ internal static class JwtTestSupport
     {
         using var response = await client.PostAsync($"/test/login/{role}", null);
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-        var token = await response.Content.ReadFromJsonAsync<IssuedJwt>();
+        var token = await response.Content.ReadFromJsonAsync<AccessTokenDto>();
         Assert.NotNull(token);
         client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token.AccessToken);
     }

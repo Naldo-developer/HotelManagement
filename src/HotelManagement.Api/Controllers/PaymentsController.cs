@@ -1,5 +1,4 @@
-﻿using System.Security.Claims;
-using HotelManagement.Api.Authorization;
+﻿using HotelManagement.Api.Authorization;
 using HotelManagement.Application.Dtos.Payments;
 using HotelManagement.Application.UseCases.Payments.Commands;
 using HotelManagement.Application.UseCases.Payments.Queries;
@@ -19,12 +18,7 @@ public class PaymentsController(ISender sender) : ControllerBase
         [FromBody] CreatePaymentDto input,
         CancellationToken cancellationToken)
     {
-        var claim = User.FindFirstValue(ClaimTypes.NameIdentifier);
-
-        if (!long.TryParse(claim, out var userId))
-        {
-            return Unauthorized();
-        }
+        var userId = User.GetUserId();
 
         var payment = await sender.Send(
             new CreatePaymentCommand(input, userId),

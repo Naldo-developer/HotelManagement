@@ -1,7 +1,7 @@
 ﻿using HotelManagement.Application.Dtos.Consumptions;
 using HotelManagement.Domain.Entities;
 
-namespace HotelManagement.Application.UseCases.Consumptions;
+namespace HotelManagement.Application.Mappings;
 
 internal static class ConsumptionMapping
 {

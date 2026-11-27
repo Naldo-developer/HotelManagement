@@ -1,4 +1,5 @@
 using System.Data;
+using HotelManagement.Application.Interfaces;
 using HotelManagement.Application.Transactions;
 using Microsoft.EntityFrameworkCore;
 

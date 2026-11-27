@@ -1,6 +1,7 @@
 ﻿using HotelManagement.Application.Transactions;
 using System.ComponentModel.DataAnnotations;
 using HotelManagement.Application.Dtos.Users;
+using HotelManagement.Application.Mappings;
 using HotelManagement.Application.Security;
 using HotelManagement.Domain.Entities;
 using HotelManagement.Domain.Exceptions;

@@ -10,8 +10,9 @@ using Microsoft.IdentityModel.Tokens;
 namespace HotelManagement.Api.Security;
 
 public sealed class JwtTokenIssuer(IOptions<JwtOptions> settings)
+    : HotelManagement.Application.Interfaces.Services.IAccessTokenIssuer
 {
-    public IssuedJwt Issue(AuthenticatedUserDto user)
+    public AccessTokenDto Issue(AuthenticatedUserDto user)
     {
         var options = settings.Value;
         var now = DateTime.UtcNow;
@@ -30,8 +31,6 @@ public sealed class JwtTokenIssuer(IOptions<JwtOptions> settings)
             signingCredentials: new SigningCredentials(
                 new SymmetricSecurityKey(Encoding.UTF8.GetBytes(options.SigningKey)),
                 SecurityAlgorithms.HmacSha256));
-        return new IssuedJwt(new JwtSecurityTokenHandler().WriteToken(token), expires);
+        return new AccessTokenDto(new JwtSecurityTokenHandler().WriteToken(token), expires);
     }
 }
-
-public sealed record IssuedJwt(string AccessToken, DateTimeOffset ExpiresAtUtc);

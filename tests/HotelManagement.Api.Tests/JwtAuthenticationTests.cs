@@ -51,6 +51,10 @@ public sealed class JwtAuthenticationTests
     [InlineData("unsigned")]
     [InlineData("wrong-algorithm")]
     [InlineData("tampered")]
+    [InlineData("invalid-subject")]
+    [InlineData("zero-subject")]
+    [InlineData("negative-subject")]
+    [InlineData("empty-subject")]
     public async Task Invalid_tokens_are_rejected(string scenario)
     {
         await using var app = await StartApp();
@@ -62,7 +66,14 @@ public sealed class JwtAuthenticationTests
         var token = new JwtSecurityToken(
             issuer: scenario == "wrong-issuer" ? "other-issuer" : options.Issuer,
             audience: scenario == "wrong-audience" ? "other-audience" : options.Audience,
-            claims: [new Claim("sub", "42"), new Claim("unique_name", "jwt.test"), new Claim("role", "ADMIN")],
+            claims: [new Claim("sub", scenario switch
+            {
+                "invalid-subject" => "usuario",
+                "zero-subject" => "0",
+                "negative-subject" => "-1",
+                "empty-subject" => "",
+                _ => "42"
+            }), new Claim("unique_name", "jwt.test"), new Claim("role", "ADMIN")],
             notBefore: scenario == "expired" ? now.AddMinutes(-5) : scenario == "future" ? now.AddMinutes(5) : now.AddMinutes(-1),
             expires: scenario == "missing-expiration" ? null : scenario == "expired" ? now.AddMinutes(-1) : now.AddMinutes(15),
             signingCredentials: scenario == "unsigned" ? null : new SigningCredentials(

@@ -1,7 +1,7 @@
 ﻿using HotelManagement.Application.Dtos.Users;
 using HotelManagement.Domain.Entities;
 
-namespace HotelManagement.Application.UseCases.Users;
+namespace HotelManagement.Application.Mappings;
 
 internal static class UserMapping
 {

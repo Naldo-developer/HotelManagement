@@ -1,4 +1,4 @@
-namespace HotelManagement.Application.Transactions;
+namespace HotelManagement.Application.Interfaces;
 
 /// <summary>Confirma o revierte todas las escrituras del caso de uso.</summary>
 public interface IUnitOfWork

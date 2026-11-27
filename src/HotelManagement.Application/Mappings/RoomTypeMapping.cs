@@ -1,7 +1,7 @@
 ﻿using HotelManagement.Application.Dtos.RoomTypes;
 using HotelManagement.Domain.Entities;
 
-namespace HotelManagement.Application.UseCases.RoomTypes;
+namespace HotelManagement.Application.Mappings;
 
 internal static class RoomTypeMapping
 {

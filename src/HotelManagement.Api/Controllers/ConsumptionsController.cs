@@ -1,5 +1,4 @@
-﻿using System.Security.Claims;
-using HotelManagement.Api.Authorization;
+﻿using HotelManagement.Api.Authorization;
 using HotelManagement.Application.Dtos.Consumptions;
 using HotelManagement.Application.UseCases.Consumptions.Commands;
 using HotelManagement.Application.UseCases.Consumptions.Queries;
@@ -19,12 +18,7 @@ public class ConsumptionsController(ISender sender) : ControllerBase
         [FromBody] CreateConsumptionDto input,
         CancellationToken cancellationToken)
     {
-        var claim = User.FindFirstValue(ClaimTypes.NameIdentifier);
-
-        if (!long.TryParse(claim, out var userId))
-        {
-            return Unauthorized();
-        }
+        var userId = User.GetUserId();
 
         var consumption = await sender.Send(
             new CreateConsumptionCommand(input, userId),

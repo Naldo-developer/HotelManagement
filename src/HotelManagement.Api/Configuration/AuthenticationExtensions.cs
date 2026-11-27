@@ -18,6 +18,8 @@ public static class AuthenticationExtensions
                 "Jwt:SigningKey debe tener al menos 32 bytes y configurarse fuera del repositorio.")
             .ValidateOnStart();
         services.AddSingleton<JwtTokenIssuer>();
+        services.AddSingleton<HotelManagement.Application.Interfaces.Services.IAccessTokenIssuer>(
+            provider => provider.GetRequiredService<JwtTokenIssuer>());
         services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer();
         services.AddOptions<JwtBearerOptions>(JwtBearerDefaults.AuthenticationScheme)
             .Configure<IOptions<JwtOptions>>((bearer, settings) =>
@@ -25,6 +27,18 @@ public static class AuthenticationExtensions
                 var options = settings.Value;
                 bearer.MapInboundClaims = true;
                 bearer.IncludeErrorDetails = false;
+                bearer.Events = new JwtBearerEvents
+                {
+                    OnTokenValidated = context =>
+                    {
+                        // Una identidad autenticada debe tener un identificador positivo.
+                        if (!long.TryParse(context.Principal?.FindFirstValue(ClaimTypes.NameIdentifier),
+                                System.Globalization.NumberStyles.None,
+                                System.Globalization.CultureInfo.InvariantCulture, out var userId) || userId <= 0)
+                            context.Fail("La identidad no contiene un identificador válido.");
+                        return Task.CompletedTask;
+                    }
+                };
                 bearer.TokenValidationParameters = new TokenValidationParameters
                 {
                     ValidateIssuer = true,

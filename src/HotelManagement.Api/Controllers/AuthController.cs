@@ -1,6 +1,4 @@
-﻿using System.Globalization;
-using System.Security.Claims;
-using HotelManagement.Api.Security;
+﻿using HotelManagement.Api.Authorization;
 using HotelManagement.Application.Dtos.Auth;
 using HotelManagement.Application.UseCases.Auth.Commands;
 using MediatR;
@@ -11,28 +9,13 @@ namespace HotelManagement.Api.Controllers;
 
 [ApiController]
 [Route("api/auth")]
-public class AuthController(ISender sender, JwtTokenIssuer tokens) : ControllerBase
+public class AuthController(ISender sender) : ControllerBase
 {
     [HttpPost("login")]
     public async Task<ActionResult<AuthenticatedUserDto>> Login([FromBody] LoginDto input)
     {
         var user = await sender.Send(new LoginCommand(input), HttpContext.RequestAborted);
-
-        if (user is null)
-        {
-            return Problem(
-                statusCode: StatusCodes.Status401Unauthorized,
-                title: "Credenciales inválidas.",
-                detail: "Usuario o contraseña incorrectos.");
-        }
-
-        var issued = tokens.Issue(user);
-        user.AccessToken = issued.AccessToken;
-        user.TokenType = "Bearer";
-        user.ExpiresAtUtc = issued.ExpiresAtUtc;
-        Response.Headers.CacheControl = "no-store";
-        Response.Headers.Pragma = "no-cache";
-        return Ok(user);
+        return AuthenticationHttpResponse.FromLogin(this, user);
     }
 
     [HttpPost("logout")]
@@ -48,13 +31,6 @@ public class AuthController(ISender sender, JwtTokenIssuer tokens) : ControllerB
     [HttpGet("me")]
     public ActionResult<AuthenticatedUserDto> Me()
     {
-        return Ok(new AuthenticatedUserDto
-        {
-            UserId = long.Parse(
-                User.FindFirstValue(ClaimTypes.NameIdentifier)!, CultureInfo.InvariantCulture),
-            Username = User.Identity!.Name!,
-            FullName = User.FindFirstValue("full_name") ?? string.Empty,
-            Roles = User.FindAll(ClaimTypes.Role).Select(claim => claim.Value).ToList()
-        });
+        return Ok(User.ToIdentity());
     }
 }

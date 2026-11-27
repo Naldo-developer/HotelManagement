@@ -15,6 +15,7 @@ using System.Net;
 using System.Net.Http.Json;
 using HotelManagement.Api.Configuration;
 using HotelManagement.Api.Controllers;
+using HotelManagement.Application.Interfaces;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.TestHost;
@@ -226,6 +227,7 @@ public sealed class UnitOfWorkTests
             services.AddLogging();
             services.AddApplication();
             services.AddInfrastructure(connectionString);
+            services.AddSingleton<HotelManagement.Application.Interfaces.Services.IAccessTokenIssuer, FakeAccessTokenIssuer>();
             await using var provider = services.BuildServiceProvider(new ServiceProviderOptions
                 { ValidateScopes = true, ValidateOnBuild = true });
             await test(provider, connectionString);
