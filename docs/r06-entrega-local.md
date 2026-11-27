@@ -1,5 +1,10 @@
 # R06 — entrega local verificada
 
+Este informe corresponde a la versión anterior con cookies. La autenticación
+actual utiliza JWT; el nuevo Release se verificó en `Delivery/jwt-20261126`.
+Ver [autenticación JWT](autenticacion-jwt.md) para los requisitos y el contrato
+vigentes. Los comandos actuales están en el README.
+
 Fecha: 26/11/2026. Modalidad confirmada por Ronaldo: entrega en esta PC.
 R06 queda completado para esa modalidad; R07/Y08 siguen su revisión independiente.
 No se acredita alojamiento público ni acceso desde otra computadora.

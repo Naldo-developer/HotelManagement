@@ -3,6 +3,9 @@
 API .NET 10, PostgreSQL e interfaz estática del mismo origen. Capas Api,
 Application, Domain e Infrastructure; CQRS con MediatR.
 
+Autenticación actual: **JWT Bearer**, con tokens de acceso de 15 minutos.
+[Configuración y uso de JWT](docs/autenticacion-jwt.md).
+
 La [guía de arquitectura](docs/arquitectura.md) describe las carpetas, dependencias
 y convenciones actuales. El workflow `.github/workflows/ci.yml` prepara la
 compilación Release, pruebas con PostgreSQL 18 y artefactos de publicación en
@@ -13,7 +16,8 @@ completado para entrega local en esta PC**; R07 parcial.
 [Resultados R05](docs/verificacion-20261126.md) y
 [evidencia R06 local](docs/r06-entrega-local.md).
 Main revisado: 61393d6 (incluye T08). Código del ciclo probado: 7cf7807.
-Versión Release probada: f15c734a7177579722c7bb6af0018bfa0872553a.
+Evidencia Release anterior a JWT: f15c734a7177579722c7bb6af0018bfa0872553a.
+La entrega JWT se publicó y verificó en `Delivery/jwt-20261126`.
 URL local verificada: **http://127.0.0.1:5086**. No se acredita aceptación Y08.
 
 ## Preparar y ejecutar
@@ -32,6 +36,9 @@ En Development, `DemoAccounts__Password` (mínimo ocho caracteres) aprovisiona
 admin.demo, recepcion.demo, caja.demo y mantenimiento.demo con hash.
 No cambia contraseñas existentes. Production requiere cuentas ya aprovisionadas.
 El seed contiene datos ficticios y correos example.invalid.
+Configurar además `Jwt:SigningKey` en User Secrets o `Jwt__SigningKey` en el
+entorno, con una clave aleatoria de al menos 32 bytes. No existe clave por defecto
+ni se guarda en appsettings. Ver el comando seguro de generación en la guía JWT.
 
 ```powershell
 dotnet build HotelManagement.sln --nologo
@@ -54,6 +61,8 @@ dotnet test HotelManagement.sln --nologo -- xUnit.ParallelizeTestCollections=fal
 ```
 
 Resultado real: **45 aprobadas, 0 fallidas, 0 omitidas**. Compilación correcta.
+La migración JWT se verificó después con **74 pruebas .NET y 3 pruebas del
+cliente JavaScript aprobadas**, incluidas las integraciones con PostgreSQL.
 Verificación posterior de la integración con T08, Aurora y R06: **50 aprobadas,
 0 fallidas, 0 omitidas**, con PostgreSQL 18 temporal en loopback. Detalles y
 alcance del commit consolidado en [integración de entrega](docs/integracion-entrega.md).
@@ -87,7 +96,7 @@ siguen pendientes del equipo. No se atribuyen esas tareas a Ronaldo.
 Comando probado desde la rama del PR #26, con destino nuevo:
 
 ```powershell
-./scripts/Publish-Delivery.ps1 -OutputDirectory "$env:LOCALAPPDATA/HotelManagement/Delivery/f15c734a"
+./scripts/Publish-Delivery.ps1 -OutputDirectory "$env:LOCALAPPDATA/HotelManagement/Delivery/jwt-20261126"
 ```
 
 Release correcto: DLL, HTML, CSS y JavaScript presentes. Para el destino usar
@@ -98,15 +107,16 @@ ASPNETCORE_ENVIRONMENT=Production y ASPNETCORE_URLS. Desde la carpeta publicada:
 dotnet HotelManagement.Api.dll
 ```
 
-Comprobación ejecutada con éxito, con ConnectionStrings__DefaultConnection,
+Comprobación ejecutada con éxito, con ConnectionStrings__DefaultConnection, Jwt__SigningKey,
 DELIVERY_USERNAME y DELIVERY_PASSWORD externos y una cuenta ya aprovisionada:
 
 ```powershell
-./scripts/Test-Delivery.ps1 -PublishedDirectory "$env:LOCALAPPDATA/HotelManagement/Delivery/f15c734a" -RequireDemoData
+./scripts/Test-Delivery.ps1 -PublishedDirectory "$env:LOCALAPPDATA/HotelManagement/Delivery/jwt-20261126" -RequireDemoData
 ```
 
 Resultados: Production, web y recursos Aurora, rutas 401/404, login válido e
-inválido, PostgreSQL con datos ficticios, sesión tras reinicio y logout correctos.
+inválido, PostgreSQL con datos ficticios y JWT válido tras reinicio correctos.
+Logout descarta el token del cliente; esta versión no revoca copias ya emitidas.
 Sin conexión configurada el arranque falla con el mensaje esperado. Estos
 resultados sustituyen el bloqueo de ejecución registrado anteriormente.
 
@@ -114,17 +124,18 @@ La carpeta anterior ya está publicada; para publicar de nuevo, usar otra vacía
 El puerto de prueba debe estar libre. Para iniciar la entrega local existente:
 
 ```powershell
-./scripts/Start-LocalDelivery.ps1 -PublishedDirectory "$env:LOCALAPPDATA/HotelManagement/Delivery/f15c734a"
+./scripts/Start-LocalDelivery.ps1 -PublishedDirectory "$env:LOCALAPPDATA/HotelManagement/Delivery/jwt-20261126"
 ```
 
-El lanzador usa la conexión del entorno o la conexión de los User Secrets de
-esta PC, la pasa por entorno y fija Production con escucha solo en loopback.
-No copia secretos ni crea cuentas. Las claves Data Protection permanecen en el
-perfil Windows; el reinicio conservando sesión fue comprobado. Detener con
+El lanzador usa conexión y clave JWT del entorno o de los User Secrets de
+esta PC, las pasa por entorno y fija Production con escucha solo en loopback.
+No copia secretos ni crea cuentas. El token sigue válido tras reiniciar con la
+misma clave de firma. El navegador mantiene el token solo en memoria y exige
+login al recargar la página; no hay refresh tokens. Detener con
 Ctrl+C. No iniciar otra instancia si la URL ya responde.
 
 La modalidad acordada es local. Otro destino o acceso por red requiere verificar
-HTTPS, proxy y persistencia de claves en ese entorno.
+HTTPS, proxy y custodia de la clave de firma en ese entorno.
 
 ## Autores y estado de revisión
 

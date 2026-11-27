@@ -1,11 +1,8 @@
-﻿using System.Net;
+using System.Net;
 using System.Reflection;
-using System.Security.Claims;
 using HotelManagement.Api.Authorization;
 using HotelManagement.Api.Configuration;
 using HotelManagement.Api.Controllers;
-using Microsoft.AspNetCore.Authentication;
-using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -20,6 +17,34 @@ namespace HotelManagement.Api.Tests;
 
 public class RolePolicyTests
 {
+    [Theory]
+    [InlineData(null, HttpStatusCode.Unauthorized)]
+    [InlineData("MAINTENANCE", HttpStatusCode.Forbidden)]
+    [InlineData("RECEPTION", HttpStatusCode.Forbidden)]
+    [InlineData("CASHIER", HttpStatusCode.OK)]
+    [InlineData("ADMIN", HttpStatusCode.OK)]
+    public async Task Financial_policy_returns_expected_status(string? role, HttpStatusCode expected)
+    {
+        await using var app = await StartApp();
+        using var client = await ClientAsync(app, role);
+        using var response = await client.GetAsync("/test/financial");
+        Assert.Equal(expected, response.StatusCode);
+    }
+
+    [Theory]
+    [InlineData(null, HttpStatusCode.Unauthorized)]
+    [InlineData("MAINTENANCE", HttpStatusCode.OK)]
+    [InlineData("RECEPTION", HttpStatusCode.Forbidden)]
+    [InlineData("CASHIER", HttpStatusCode.Forbidden)]
+    [InlineData("ADMIN", HttpStatusCode.OK)]
+    public async Task Maintenance_policy_returns_expected_status(string? role, HttpStatusCode expected)
+    {
+        await using var app = await StartApp();
+        using var client = await ClientAsync(app, role);
+        using var response = await client.GetAsync("/test/maintenance");
+        Assert.Equal(expected, response.StatusCode);
+    }
+
     [Theory]
     [InlineData(null, HttpStatusCode.Unauthorized)]
     [InlineData("MAINTENANCE", HttpStatusCode.Forbidden)]
@@ -128,28 +153,14 @@ public class RolePolicyTests
         var builder = WebApplication.CreateBuilder();
         builder.WebHost.UseTestServer();
         builder.Logging.ClearProviders();
-        builder.Services.AddApiAuthentication();
+        JwtTestSupport.Configure(builder);
+            builder.Services.AddApiAuthentication();
 
         var app = builder.Build();
         app.UseAuthentication();
         app.UseAuthorization();
 
-        app.MapPost("/test/login/{role}", async (HttpContext context, string role) =>
-        {
-            var claims = new List<Claim>
-            {
-                new(ClaimTypes.Name, "usuario.prueba"),
-                new(ClaimTypes.Role, role)
-            };
-            var identity = new ClaimsIdentity(
-                claims, CookieAuthenticationDefaults.AuthenticationScheme);
-
-            await context.SignInAsync(
-                CookieAuthenticationDefaults.AuthenticationScheme,
-                new ClaimsPrincipal(identity));
-
-            return Results.NoContent();
-        });
+        JwtTestSupport.MapLogin(app);
 
         app.MapGet("/test/operations", () => "ok")
             .RequireAuthorization(AppPolicies.Operations);
@@ -157,6 +168,8 @@ public class RolePolicyTests
             .RequireAuthorization(AppPolicies.Configuration);
         app.MapGet("/test/authenticated", () => "ok")
             .RequireAuthorization();
+        app.MapGet("/test/financial", () => "ok").RequireAuthorization(AppPolicies.Financial);
+        app.MapGet("/test/maintenance", () => "ok").RequireAuthorization(AppPolicies.Maintenance);
 
         await app.StartAsync();
         return app;
@@ -168,11 +181,7 @@ public class RolePolicyTests
 
         if (role is not null)
         {
-            using var login = await client.PostAsync($"/test/login/{role}", null);
-            Assert.Equal(HttpStatusCode.NoContent, login.StatusCode);
-
-            var cookie = login.Headers.GetValues("Set-Cookie").First().Split(';')[0];
-            client.DefaultRequestHeaders.Add("Cookie", cookie);
+            await JwtTestSupport.SignInAsync(client, role);
         }
 
         return client;

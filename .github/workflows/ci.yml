@@ -59,6 +59,8 @@ jobs:
               throw 'La suite no puede pasar con pruebas vacias u omitidas.'
             }
           }
+      - name: Test browser JWT client
+        run: node --test tests/web/*.test.mjs
       - name: Publish Release artifact
         run: dotnet publish src/HotelManagement.Api --configuration Release --no-build --output publish
       - name: Upload test results

@@ -1,4 +1,5 @@
 import { api } from '../api.js';
+import { setAccessToken } from '../auth-token.js';
 import { clearMessages, el, showError, showMessage } from '../ui.js';
 
 export function renderLogin(container, onSuccess) {
@@ -21,7 +22,7 @@ export function renderLogin(container, onSuccess) {
             el('span', { class: 'eyebrow', text: 'ACCESO DEL EQUIPO' }),
             el('h2', { text: 'Bienvenido de nuevo.' }),
             el('p', { class: 'muted', text: 'Ingresa a tu espacio de gestión.' }), form,
-            el('p', { class: 'login-note', text: 'Acceso exclusivo para el equipo del hotel.' }))));
+            el('p', { class: 'login-note', text: 'Acceso del equipo. Al recargar la página deberás iniciar sesión nuevamente.' }))));
 
     let saving = false;
 
@@ -45,8 +46,10 @@ export function renderLogin(container, onSuccess) {
                 username: username.value.trim(),
                 password: password.value,
             });
+            setAccessToken(user.accessToken, user.expiresAtUtc);
             password.value = '';
-            onSuccess(user);
+            const { accessToken, tokenType, expiresAtUtc, ...identity } = user;
+            onSuccess(identity);
         } catch (error) {
             showError(error); // 401: "Usuario o contraseña incorrectos."
             password.value = '';

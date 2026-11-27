@@ -13,10 +13,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Npgsql;
-using System.Security.Claims;
 using HotelManagement.Infrastructure.Persistence;
-using Microsoft.AspNetCore.Authentication;
-using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Http;
 
 namespace HotelManagement.Api.Tests;
@@ -67,28 +64,14 @@ public sealed class RoomPersistenceTests
             builder.Services.AddInfrastructure(connectionString);
             builder.Services.AddApplication();
             builder.Services.AddApiErrorHandling();
+            JwtTestSupport.Configure(builder);
             builder.Services.AddApiAuthentication();
             builder.Services.AddControllers().AddApplicationPart(typeof(RoomsController).Assembly);
             await using var app = builder.Build();
             app.UseExceptionHandler(new ExceptionHandlerOptions { SuppressDiagnosticsCallback = _ => true });
             app.UseAuthentication();
             app.UseAuthorization();
-            app.MapPost("/test/login/{role}", async (HttpContext context, string role) =>
-            {
-                var claims = new List<Claim>
-                {
-                    new(ClaimTypes.Name, "usuario.prueba"),
-                    new(ClaimTypes.Role, role)
-                };
-                var identity = new ClaimsIdentity(
-                    claims, CookieAuthenticationDefaults.AuthenticationScheme);
-
-                await context.SignInAsync(
-                    CookieAuthenticationDefaults.AuthenticationScheme,
-                    new ClaimsPrincipal(identity));
-
-                return Results.NoContent();
-            });
+            JwtTestSupport.MapLogin(app);
             app.MapControllers();
             await app.StartAsync();
             using var anonymous = app.GetTestClient();
@@ -154,11 +137,7 @@ public sealed class RoomPersistenceTests
     }
     private static async Task SignInAsync(HttpClient client, string role)
     {
-        using var login = await client.PostAsync($"/test/login/{role}", null);
-        Assert.Equal(HttpStatusCode.NoContent, login.StatusCode);
-
-        var cookie = login.Headers.GetValues("Set-Cookie").First().Split(';')[0];
-        client.DefaultRequestHeaders.Add("Cookie", cookie);
+        await JwtTestSupport.SignInAsync(client, role);
     }
     private static void AssertRoom(RoomDto room, CreateRoomDto input)
     {

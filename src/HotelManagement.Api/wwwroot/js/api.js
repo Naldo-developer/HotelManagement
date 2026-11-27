@@ -1,5 +1,7 @@
 // Cliente central de la API. Todas las rutas son relativas al mismo origen (/api/...).
 
+import { clearAccessToken, getAccessToken } from './auth-token.js';
+
 const loadingListeners = new Set();
 let pendingRequests = 0;
 
@@ -83,7 +85,9 @@ function buildUrl(path, query) {
 
 async function request(method, path, { query, body, signal } = {}) {
     const headers = { Accept: 'application/json, application/problem+json' };
-    const options = { method, headers, signal };
+    const token = getAccessToken();
+    if (token && path !== '/api/auth/login') headers.Authorization = `Bearer ${token}`;
+    const options = { method, headers, signal, credentials: 'omit' };
 
     if (body !== undefined) {
         headers['Content-Type'] = 'application/json';
@@ -104,6 +108,7 @@ async function request(method, path, { query, body, signal } = {}) {
 
         if (!response.ok) {
             const problem = await readProblem(response);
+            if (response.status === 401 && path !== '/api/auth/login') clearAccessToken();
             // Un 401 del propio login o de /api/auth/me es normal y lo maneja su pantalla.
             if (response.status === 401 && !path.startsWith('/api/auth/')) {
                 window.dispatchEvent(new CustomEvent('api:unauthorized'));

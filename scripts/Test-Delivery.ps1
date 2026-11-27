@@ -5,7 +5,7 @@ param(
 )
 
 $ErrorActionPreference = 'Stop'
-foreach ($name in @('ConnectionStrings__DefaultConnection', 'DELIVERY_USERNAME', 'DELIVERY_PASSWORD')) {
+foreach ($name in @('ConnectionStrings__DefaultConnection', 'Jwt__SigningKey', 'DELIVERY_USERNAME', 'DELIVERY_PASSWORD')) {
     if (-not [Environment]::GetEnvironmentVariable($name)) { throw "Falta variable $name" }
 }
 $directory = (Resolve-Path -LiteralPath $PublishedDirectory).Path
@@ -16,8 +16,8 @@ if (Get-NetTCPConnection -LocalPort $Port -State Listen -ErrorAction SilentlyCon
 }
 foreach ($configFile in Get-ChildItem -LiteralPath $directory -Filter 'appsettings*.json') {
     $config = Get-Content -LiteralPath $configFile.FullName -Raw | ConvertFrom-Json
-    if ($config.ConnectionStrings.DefaultConnection -or $config.DemoAccounts.Password) {
-        throw 'El publish contiene conexion o password demo: configura esos valores externamente.'
+    if ($config.ConnectionStrings.DefaultConnection -or $config.DemoAccounts.Password -or $config.Jwt.SigningKey) {
+        throw 'El publish contiene secretos: configura esos valores externamente.'
     }
 }
 $previousEnvironment = $env:ASPNETCORE_ENVIRONMENT
@@ -39,7 +39,7 @@ try {
         } catch { Start-Sleep -Milliseconds 250 }
     }
     if (-not $ready) { throw 'No responde salud del proceso publicado' }
-    foreach ($path in @('/', '/js/app.js', '/css/styles.css')) {
+    foreach ($path in @('/', '/js/app.js', '/js/auth-token.js', '/css/styles.css')) {
         if ((Invoke-WebRequest "$base$path" -UseBasicParsing).StatusCode -ne 200) { throw "Fallo $path" }
     }
     # Verifica también los recursos de marca referenciados por el HTML publicado.
@@ -55,16 +55,18 @@ try {
     $invalidBody = @{ username = $env:DELIVERY_USERNAME; password = [guid]::NewGuid().ToString('N') } | ConvertTo-Json
     try { $null = Invoke-WebRequest "$base/api/auth/login" -Method Post -ContentType 'application/json' -Body $invalidBody -UseBasicParsing; throw 'Login invalido aceptado' }
     catch { if ([int]$_.Exception.Response.StatusCode -ne 401) { throw } }
-    $null = Invoke-RestMethod "$base/api/auth/login" -Method Post -ContentType 'application/json' -Body $body -SessionVariable session
-    $me = Invoke-RestMethod "$base/api/auth/me" -WebSession $session
+    $login = Invoke-RestMethod "$base/api/auth/login" -Method Post -ContentType 'application/json' -Body $body
+    if (-not $login.accessToken -or $login.tokenType -ne 'Bearer') { throw 'El login no devolvio JWT Bearer.' }
+    $authHeaders = @{ Authorization = "Bearer $($login.accessToken)" }
+    $me = Invoke-RestMethod "$base/api/auth/me" -Headers $authHeaders
     if ($me.username -ne $env:DELIVERY_USERNAME) { throw 'Sesion incorrecta' }
-    $rooms = Invoke-RestMethod "$base/api/rooms" -WebSession $session
-    $guests = Invoke-RestMethod "$base/api/guests" -WebSession $session
+    $rooms = Invoke-RestMethod "$base/api/rooms" -Headers $authHeaders
+    $guests = Invoke-RestMethod "$base/api/guests" -Headers $authHeaders
     if ($RequireDemoData) {
         if ('DEMO-101' -notin $rooms.roomNumber) { throw 'No aparecen las habitaciones ficticias de R01.' }
         if ('ana@example.invalid' -notin $guests.email) { throw 'No aparecen los huespedes ficticios de R01.' }
     }
-    # El reinicio debe conservar la cookie con las claves del mismo usuario Windows.
+    # El token sigue siendo valido tras reiniciar si se conserva la clave JWT.
     Stop-Process -Id $process.Id
     $process.WaitForExit()
     $process = Start-Process dotnet -ArgumentList ('"{0}"' -f $dll) -WorkingDirectory $directory -WindowStyle Hidden -PassThru
@@ -78,12 +80,15 @@ try {
         } catch { Start-Sleep -Milliseconds 250 }
     }
     if (-not $ready) { throw 'No responde despues del reinicio' }
-    $me = Invoke-RestMethod "$base/api/auth/me" -WebSession $session
+    $me = Invoke-RestMethod "$base/api/auth/me" -Headers $authHeaders
     if ($me.username -ne $env:DELIVERY_USERNAME) { throw 'La sesion no sobrevivio al reinicio' }
-    $null = Invoke-RestMethod "$base/api/auth/logout" -Method Post -WebSession $session
-    try { $null = Invoke-WebRequest "$base/api/auth/me" -WebSession $session -UseBasicParsing; throw 'Logout no cerro sesion' }
+    $null = Invoke-RestMethod "$base/api/auth/logout" -Method Post -Headers $authHeaders
+    # Logout reconoce la accion. Esta version no revoca copias del JWT.
+    $null = Invoke-RestMethod "$base/api/auth/me" -Headers $authHeaders
+    $authHeaders.Clear()
+    try { $null = Invoke-WebRequest "$base/api/auth/me" -UseBasicParsing; throw 'La API acepto una solicitud sin token' }
     catch { if ([int]$_.Exception.Response.StatusCode -ne 401) { throw } }
-    Write-Output 'R06: Production, estaticos y marca, rutas 401/404, login valido/invalido, PostgreSQL, reinicio con cookie y logout correctos.'
+    Write-Output 'R06 JWT: Production, estaticos, 401/404, login valido/invalido, PostgreSQL, token tras reinicio y descarte del token correctos. Sin revocacion central.'
 } finally {
     if ($process -and -not $process.HasExited) { Stop-Process -Id $process.Id; $process.WaitForExit() }
     $env:ASPNETCORE_ENVIRONMENT = $previousEnvironment

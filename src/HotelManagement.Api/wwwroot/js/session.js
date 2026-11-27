@@ -1,6 +1,7 @@
-// Estado de la sesión del usuario (cookie hotel_session en el servidor).
+// Identidad y token de acceso JWT mantenidos en memoria durante esta página.
 import { api } from './api.js';
 import { clearCatalogCache } from './catalogs.js';
+import { clearAccessToken } from './auth-token.js';
 
 let currentUser = null;
 
@@ -8,6 +9,7 @@ export const getUser = () => currentUser;
 
 export function setUser(user) {
     currentUser = user;
+    if (!user) clearAccessToken();
     clearCatalogCache(); // los catálogos podrían variar según el usuario
 }
 
@@ -25,11 +27,7 @@ export async function fetchCurrentUser() {
 }
 
 export async function logout() {
-    try {
-        await api.post('/api/auth/logout');
-    } finally {
-        setUser(null);
-    }
+    setUser(null);
 }
 
 // Sin códigos requeridos, la sección está abierta a cualquier usuario con sesión.

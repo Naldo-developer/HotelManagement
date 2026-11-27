@@ -15,11 +15,8 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Npgsql;
-using System.Security.Claims;
 using HotelManagement.Application.Dtos.Guests;
 using HotelManagement.Infrastructure.Persistence;
-using Microsoft.AspNetCore.Authentication;
-using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Http;
 
 namespace HotelManagement.Api.Tests;
@@ -61,6 +58,7 @@ public sealed class HotelCycleHttpTests
             builder.Services.AddInfrastructure(connectionString);
             builder.Services.AddApplication();
             builder.Services.AddApiErrorHandling();
+            JwtTestSupport.Configure(builder);
             builder.Services.AddApiAuthentication();
             builder.Services.AddControllers().AddApplicationPart(typeof(RoomsController).Assembly);
             await using var app = builder.Build();
@@ -83,8 +81,10 @@ public sealed class HotelCycleHttpTests
                 new { username = "admin.demo", password }))
             {
                 Assert.Equal(HttpStatusCode.OK, login.StatusCode);
-                var cookie = login.Headers.GetValues("Set-Cookie").First().Split(';')[0];
-                client.DefaultRequestHeaders.Add("Cookie", cookie);
+                var identity = await login.Content.ReadFromJsonAsync<HotelManagement.Application.Dtos.Auth.AuthenticatedUserDto>();
+                Assert.NotNull(identity?.AccessToken);
+                Assert.False(login.Headers.Contains("Set-Cookie"));
+                client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", identity.AccessToken);
             }
             using (var me = await client.GetAsync("/api/auth/me"))
                 Assert.Equal(HttpStatusCode.OK, me.StatusCode);

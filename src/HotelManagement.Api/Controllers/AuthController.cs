@@ -1,10 +1,9 @@
 ﻿using System.Globalization;
 using System.Security.Claims;
+using HotelManagement.Api.Security;
 using HotelManagement.Application.Dtos.Auth;
 using HotelManagement.Application.UseCases.Auth.Commands;
 using MediatR;
-using Microsoft.AspNetCore.Authentication;
-using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -12,7 +11,7 @@ namespace HotelManagement.Api.Controllers;
 
 [ApiController]
 [Route("api/auth")]
-public class AuthController(ISender sender) : ControllerBase
+public class AuthController(ISender sender, JwtTokenIssuer tokens) : ControllerBase
 {
     [HttpPost("login")]
     public async Task<ActionResult<AuthenticatedUserDto>> Login([FromBody] LoginDto input)
@@ -27,28 +26,22 @@ public class AuthController(ISender sender) : ControllerBase
                 detail: "Usuario o contraseña incorrectos.");
         }
 
-        var claims = new List<Claim>
-        {
-            new(ClaimTypes.NameIdentifier, user.UserId.ToString(CultureInfo.InvariantCulture)),
-            new(ClaimTypes.Name, user.Username),
-            new("full_name", user.FullName)
-        };
-        claims.AddRange(user.Roles.Select(role => new Claim(ClaimTypes.Role, role)));
-
-        var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
-
-        await HttpContext.SignInAsync(
-            CookieAuthenticationDefaults.AuthenticationScheme,
-            new ClaimsPrincipal(identity));
-
+        var issued = tokens.Issue(user);
+        user.AccessToken = issued.AccessToken;
+        user.TokenType = "Bearer";
+        user.ExpiresAtUtc = issued.ExpiresAtUtc;
+        Response.Headers.CacheControl = "no-store";
+        Response.Headers.Pragma = "no-cache";
         return Ok(user);
     }
 
     [HttpPost("logout")]
-    public async Task<IActionResult> Logout()
+    [Authorize]
+    public Task<IActionResult> Logout()
     {
-        await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
-        return NoContent();
+        // JWT de acceso sin estado: el cliente descarta el token. No se revoca
+        // una copia previamente emitida; su validez termina con exp.
+        return Task.FromResult<IActionResult>(NoContent());
     }
 
     [Authorize]

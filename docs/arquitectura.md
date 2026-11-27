@@ -2,7 +2,8 @@
 
 HotelManagement utiliza .NET 10, ASP.NET Core, PostgreSQL y EF Core. Los casos
 de uso siguen CQRS con MediatR 12.5.0; la interfaz Aurora es una web estática
-servida por la API y utiliza autenticación por cookie del mismo origen.
+servida por la API y utiliza autenticación JWT Bearer. Los tokens de acceso se
+mantienen únicamente en memoria del cliente y expiran por defecto a los 15 minutos.
 
 ## Estructura
 
@@ -14,6 +15,7 @@ HotelManagement/
 │   │   ├── Configuration/       Registro de servicios HTTP y autenticación
 │   │   ├── Controllers/         Endpoints que envían Commands y Queries
 │   │   ├── ErrorHandling/       ProblemDetails y manejo central de errores
+│   │   ├── Security/            Emisión de tokens JWT firmados
 │   │   └── wwwroot/             Interfaz Aurora: HTML, CSS, JS e imágenes
 │   ├── HotelManagement.Application/
 │   │   ├── Configuration/       AddApplication y registro de MediatR
@@ -86,6 +88,10 @@ User Secrets en Development o variables de entorno. No se versionan conexiones
 reales, contraseñas ni claves. La salud HTTP no comprueba PostgreSQL.
 Las cuentas ficticias se aprovisionan explícitamente en Development; Production
 requiere una base y cuentas existentes. Ver [entrega local](r06-entrega-local.md).
+La clave JWT se configura fuera de Git con `Jwt:SigningKey` o `Jwt__SigningKey`.
+La API valida firma, emisor, audiencia y expiración. Los permisos siguen basados
+en roles. No se implementan refresh tokens ni revocación central en esta versión.
+Ver [autenticación JWT](autenticacion-jwt.md).
 
 ## Verificación y CI
 
