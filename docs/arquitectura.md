@@ -21,9 +21,11 @@ HotelManagement/
 │   │   ├── Configuration/       AddApplication y registro de MediatR
 │   │   ├── Dtos/                Contratos agrupados por funcionalidad
 │   │   ├── Exceptions/          Errores de aplicación
+│   │   ├── Interfaces/          IUnitOfWork y Services/IAccessTokenIssuer
+│   │   ├── Mappings/            Conversión entre entidades y DTOs
 │   │   ├── Security/            Contrato del servicio de hashing
-│   │   ├── Transactions/        Puerto Unit of Work y behavior transaccional
-│   │   └── UseCases/            Commands, Queries y mapeos por funcionalidad
+│   │   ├── Transactions/        Behavior transaccional y marcador de comandos
+│   │   └── UseCases/            Commands, Queries y sus handlers
 │   ├── HotelManagement.Domain/
 │   │   ├── Entities/            Entidades sin dependencias de persistencia
 │   │   ├── Repositories/        Contratos de acceso a datos por entidad
@@ -76,8 +78,8 @@ reserva demuestra la coordinación entre repositorios. Ver
 - Usar `Application.Dtos.<Funcionalidad>` de manera uniforme, respetando el
   nombre `Dtos` de la carpeta. Las rutas HTTP y propiedades JSON se conservan.
 - Commands en `UseCases/<Funcionalidad>/Commands` y Queries en `Queries`.
-- Mantener los mapeos junto a su funcionalidad: `ReservationMapping`,
-  `PaymentMapping`, etc. No se exige una carpeta global Mappings.
+- Mantener los DTOs en Dtos y sus conversiones en Mappings. UseCases contiene
+  Commands, Queries y handlers, sin clases auxiliares de mapeo.
 - Las acciones de controllers envían solicitudes con ISender y propagan
   HttpContext.RequestAborted; el acceso a EF Core corresponde a Infrastructure.
 - Los repositorios son específicos por entidad. Sus operaciones asíncronas
@@ -104,6 +106,82 @@ La clave JWT se configura fuera de Git con `Jwt:SigningKey` o `Jwt__SigningKey`.
 La API valida firma, emisor, audiencia y expiración. Los permisos siguen basados
 en roles. No se implementan refresh tokens ni revocación central en esta versión.
 Ver [autenticación JWT](autenticacion-jwt.md).
+
+## Aclaraciones para la revisión de arquitectura
+
+### ¿Por qué existe tests? ¿Es vital para ejecutar el sistema?
+
+No es un requisito de ejecución ni una capa de producción. Es un proyecto
+separado que se agregó para repetir verificaciones de roles, validaciones,
+concurrencia y transacciones con PostgreSQL real. Publicar la API no publica
+el proyecto de pruebas. Se conserva porque permite comprobar que una
+reorganización no altera las garantías existentes; Swagger cubre pruebas
+manuales, pero no sustituye estas verificaciones automatizadas.
+
+### ¿Dónde está Unit of Work y cómo usa genéricos?
+
+El contrato está en `Application/Interfaces/IUnitOfWork.cs`. Su método
+`ExecuteAsync<T>` es genérico: conserva el tipo de resultado del caso de uso
+sin convertirlo a object ni duplicar contratos para cada DTO. La implementación
+EfUnitOfWork permanece en Infrastructure. TransactionBehavior pertenece a
+Application/Transactions y utiliza ese puerto.
+
+No se agregó un Repository genérico: los contratos específicos expresan
+operaciones reales, como disponibilidad, check-in y pagos, que requieren
+consultas y bloqueos diferentes. No hace falta reemplazarlos por un CRUD
+genérico para demostrar una unidad de trabajo.
+
+### ¿Por qué usamos excepciones como un cortafuegos?
+
+Es una analogía de contención de fallos, no un firewall de red. Una excepción
+interrumpe una operación que no puede continuar correctamente. La unidad de
+trabajo revierte sus escrituras y el handler HTTP central entrega una respuesta
+controlada. Las excepciones de validación, conflicto y recurso inexistente
+se traducen a 400, 409 y 404; los errores inesperados devuelven un mensaje
+genérico y un traceId sin exponer detalles del proveedor ni secretos.
+
+El rollback lo realiza Unit of Work, no la excepción por sí sola. No se cambió
+el código de las excepciones ni GlobalExceptionHandler para esta reorganización.
+
+### ¿Qué es wwwroot dentro de la API?
+
+Es la raíz pública de archivos estáticos de ASP.NET Core. Contiene la web
+Aurora: HTML, CSS, JavaScript e imágenes. UseDefaultFiles y UseStaticFiles
+permiten servirla junto con la API desde el mismo origen. No es la raíz del
+dominio ni una carpeta de casos de uso. Nunca se deben guardar secretos allí.
+Separar el frontend en otro proyecto es posible, pero no es un requisito de
+arquitectura hexagonal ni de integración por HTTP.
+
+### Controllers y autenticación
+
+Los controllers delegan la validación y decisiones de negocio a los casos de
+uso. LoginCommand comprueba credenciales, actividad y roles y solicita un token
+mediante `Interfaces/Services/IAccessTokenIssuer`. JwtTokenIssuer es el adaptador
+JWT de la API; Application no referencia ASP.NET ni el proveedor de firma.
+AccessTokenDto está en Dtos/Auth.
+
+La validez del identificador del usuario se comprueba centralmente al validar
+el JWT. AuthenticatedPrincipalExtensions adapta claims validados a la identidad
+de aplicación. AuthenticationHttpResponse traduce el resultado de login a HTTP
+200 o 401 y aplica no-store; esa traducción de protocolo pertenece al adaptador
+HTTP. Los controllers ya no contienen if/else, análisis numérico de claims,
+decisiones de credenciales ni emisión de tokens.
+
+### Interpretación de la imagen de referencia y carpeta Security
+
+La imagen muestra responsabilidades y dirección de dependencias; no obliga
+a agregar RabbitMQ, correo o consola ni prescribe un nombre para cada carpeta.
+Los controllers son adaptadores de entrada y los repositorios EF son
+adaptadores de salida; Domain y Application forman el núcleo.
+
+La propuesta verbal de reemplazar Security por Services no especificaba qué
+contratos, implementaciones y capas debían moverse. Se conservaron las carpetas
+Security existentes según la instrucción de no ejecutar esa parte ambigua.
+El nuevo puerto IAccessTokenIssuer sí se ubica explícitamente en
+Interfaces/Services, separado de su implementación técnica.
+
+Resultado de esta revisión: 99 pruebas .NET y 3 JavaScript aprobadas, sin fallos
+ni omisiones, con las integraciones PostgreSQL ejecutadas.
 
 ## Verificación y CI
 

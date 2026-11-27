@@ -5,6 +5,12 @@ contraseña, la actividad de la cuenta y del empleado y los roles actuales.
 Tras una autenticación válida emite un token de acceso firmado con HS256.
 La cookie `hotel_session` de versiones anteriores ya no autentica solicitudes.
 
+LoginCommand coordina esa emisión mediante el puerto
+`Application.Interfaces.Services.IAccessTokenIssuer`; JwtTokenIssuer implementa
+el adaptador de firma en la API. El controller solo delega y adapta la respuesta
+HTTP. AccessTokenDto pertenece a Application/Dtos/Auth. La validación central
+del token exige además un identificador de usuario numérico positivo.
+
 ## Contrato HTTP
 
 `POST /api/auth/login` recibe username y password. La respuesta mantiene userId,

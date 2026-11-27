@@ -20,7 +20,7 @@ Los endpoints anteriores conservan sus contratos.
 | CreateGuestReservationCommandHandler | Coordinar el registro del huésped y la reserva reutilizando sus comandos |
 | ITransactionalRequest | Marcar explícitamente los comandos de escritura |
 | TransactionBehavior | Envolver el caso de uso en IUnitOfWork y devolver el resultado después del commit |
-| Application.Transactions.IUnitOfWork | Puerto transaccional independiente de EF Core y PostgreSQL |
+| Application.Interfaces.IUnitOfWork | Puerto transaccional genérico independiente de EF Core y PostgreSQL |
 | Domain.Repositories | Puertos de persistencia específicos por entidad |
 | Domain.Rules | Decidir reglas de fechas, capacidad, disponibilidad, check-in y saldo de salida |
 | Infrastructure.Repositories | Consultar hechos, obtener bloqueos, persistir y traducir errores de restricciones SQL |

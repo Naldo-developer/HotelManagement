@@ -11,6 +11,12 @@ escrituras. El flujo `POST /api/reservations/with-guest` registra huésped y
 reserva atómicamente. Las políticas principales de reservas y estadías están
 en Domain. Ver [implementación, pruebas y guía de exposición](docs/unidad-de-trabajo.md).
 
+La revisión de estructura ubica IUnitOfWork en Application/Interfaces, los
+mapeos en Application/Mappings y mantiene UseCases con Commands, Queries y
+handlers. Los controllers delegan sin condicionales de negocio y el login
+solicita tokens a través de un puerto. [Aclaraciones de arquitectura](docs/arquitectura.md)
+explica tests, wwwroot, excepciones y la parte pendiente de organización de servicios.
+
 La [guía de arquitectura](docs/arquitectura.md) describe las carpetas, dependencias
 y convenciones actuales. El workflow `.github/workflows/ci.yml` prepara la
 compilación Release, pruebas con PostgreSQL 18 y artefactos de publicación en
