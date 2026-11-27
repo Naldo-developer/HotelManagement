@@ -1,6 +1,7 @@
 ﻿using System.Data;
 using HotelManagement.Application.Exceptions;
 using HotelManagement.Domain.Entities;
+using HotelManagement.Domain.Exceptions;
 using HotelManagement.Domain.Repositories;
 using HotelManagement.Infrastructure.Configuration;
 using HotelManagement.Infrastructure.Persistence;

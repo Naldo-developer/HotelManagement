@@ -1,6 +1,8 @@
-﻿using System.Data;
+﻿using HotelManagement.Domain.Rules;
+using System.Data;
 using HotelManagement.Application.Exceptions;
 using HotelManagement.Domain.Entities;
+using HotelManagement.Domain.Exceptions;
 using HotelManagement.Domain.Repositories;
 using HotelManagement.Infrastructure.Configuration;
 using HotelManagement.Infrastructure.Persistence;
@@ -84,22 +86,13 @@ public class StayRepository(HotelManagementDbContext context)
         }
 
         // El estado se valida después de obtener el bloqueo.
-        if (reservation.Status != "PENDING" &&
-            reservation.Status != "CONFIRMED")
-        {
-            throw new BusinessConflictException(
-                "Solo se puede hacer check-in de reservas pendientes o confirmadas.");
-        }
+        StayRules.EnsureReservationAllowsCheckIn(reservation.Status);
 
         var alreadyHasStay = await context.Stays.AnyAsync(
             stay => stay.ReservationId == reservationId,
             cancellationToken);
 
-        if (alreadyHasStay)
-        {
-            throw new BusinessConflictException(
-                "La reserva ya tiene una estadía registrada.");
-        }
+        StayRules.EnsureNoExistingStay(alreadyHasStay);
 
         // Serializa los check-in de reservas diferentes
         // que intenten ocupar la misma habitación.
@@ -121,11 +114,7 @@ public class StayRepository(HotelManagementDbContext context)
                 "La habitación de la reserva no existe.");
         }
 
-        if (room.OperationalStatus != "ACTIVE")
-        {
-            throw new BusinessConflictException(
-                "La habitación no se encuentra operativa.");
-        }
+        ReservationRules.EnsureOperationalRoom(room.OperationalStatus);
 
         var hasActiveStay = await context.Stays.AnyAsync(
             stay =>
@@ -134,11 +123,7 @@ public class StayRepository(HotelManagementDbContext context)
                  stay.CheckOutAt == null),
             cancellationToken);
 
-        if (hasActiveStay)
-        {
-            throw new BusinessConflictException(
-                "La habitación ya tiene una estadía abierta.");
-        }
+        StayRules.EnsureNoOpenStay(hasActiveStay);
 
         var hotel = await context.Hotels
             .AsNoTracking()
@@ -152,34 +137,15 @@ public class StayRepository(HotelManagementDbContext context)
                 item => item.RoomTypeId == room.RoomTypeId,
                 cancellationToken);
 
-        if (!hotel.Active || !roomType.Active)
-        {
-            throw new BusinessConflictException(
-                "El hotel o el tipo de habitación no se encuentra activo.");
-        }
+        StayRules.EnsureActiveCatalog(hotel.Active, roomType.Active);
 
         // Revalida capacidad por si se editó el tipo de habitación.
-        if (reservation.Adults > roomType.MaxAdults ||
-            reservation.Children > roomType.MaxChildren)
-        {
-            throw new BusinessConflictException(
-                "La capacidad actual de la habitación no admite a los huéspedes de la reserva.");
-        }
-
-        var timeZone = TimeZoneInfo.FindSystemTimeZoneById(
-            hotel.Timezone);
+        StayRules.EnsureCheckInCapacity(reservation.Adults, reservation.Children,
+            roomType.MaxAdults, roomType.MaxChildren);
 
         var checkInAt = DateTime.UtcNow;
-
-        var localDate = DateOnly.FromDateTime(
-            TimeZoneInfo.ConvertTimeFromUtc(checkInAt, timeZone));
-
-        if (localDate < reservation.CheckInDate ||
-            localDate >= reservation.CheckOutDate)
-        {
-            throw new BusinessConflictException(
-                "El check-in debe realizarse desde la fecha de entrada y antes de la fecha de salida.");
-        }
+        StayRules.EnsureCheckInPeriod(checkInAt, hotel.Timezone,
+            reservation.CheckInDate, reservation.CheckOutDate);
 
         var hasMaintenance = await context.Maintenances.AnyAsync(
             maintenance =>
@@ -190,11 +156,7 @@ public class StayRepository(HotelManagementDbContext context)
                 maintenance.EndDate > reservation.CheckInDate,
             cancellationToken);
 
-        if (hasMaintenance)
-        {
-            throw new BusinessConflictException(
-                "La habitación tiene mantenimiento durante el periodo de la reserva.");
-        }
+        StayRules.EnsureNoMaintenance(hasMaintenance);
 
         var validUser = await context.AppUsers.AnyAsync(
             user =>
@@ -294,11 +256,7 @@ public class StayRepository(HotelManagementDbContext context)
                     "La estadía indicada no existe.");
             }
 
-            if (stay.Status != "ACTIVE" || stay.CheckOutAt is not null)
-            {
-                throw new BusinessConflictException(
-                    "Solo se pueden cerrar estadías activas.");
-            }
+            StayRules.EnsureOpenForCheckOut(stay.Status, stay.CheckOutAt);
 
             var reservation = await context.Reservations
                 .FromSqlInterpolated($"""
@@ -331,12 +289,6 @@ public class StayRepository(HotelManagementDbContext context)
                     "El usuario que realiza el check-out no está activo.");
             }
 
-            var nights =
-                reservation.CheckOutDate.DayNumber -
-                reservation.CheckInDate.DayNumber;
-
-            var accommodationTotal = nights * reservation.NightlyRate;
-
             var consumptionTotal = await context.Consumptions
                 .Where(consumption => consumption.StayId == stayId)
                 .Select(consumption =>
@@ -361,15 +313,8 @@ public class StayRepository(HotelManagementDbContext context)
                     ? -payment.Amount
                     : payment.Amount);
 
-            var totalDue = accommodationTotal + consumptionTotal;
-            var balanceDue = totalDue - totalPaid;
-
-            if (balanceDue > 0.01m)
-            {
-                throw new BusinessConflictException(
-                    $"No se puede cerrar la estadía. " +
-                    $"Saldo pendiente: {balanceDue:0.00}.");
-            }
+            StayRules.EnsureSettledBalance(reservation.CheckInDate, reservation.CheckOutDate,
+                reservation.NightlyRate, consumptionTotal, totalPaid);
 
             stay.Status = "COMPLETED";
             stay.CheckOutAt = DateTime.UtcNow;

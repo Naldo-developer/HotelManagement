@@ -4,6 +4,7 @@ using System.Text;
 using System.Text.Json;
 using HotelManagement.Api.Configuration;
 using HotelManagement.Application.Exceptions;
+using HotelManagement.Domain.Exceptions;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;

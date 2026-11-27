@@ -5,6 +5,7 @@ using HotelManagement.Infrastructure.Configuration;
 using Microsoft.EntityFrameworkCore;
 using Npgsql;
 using System.Data;
+using HotelManagement.Domain.Exceptions;
 using HotelManagement.Infrastructure.Persistence;
 
 namespace HotelManagement.Infrastructure.Repositories;
@@ -53,7 +54,7 @@ public class RoomRepository(HotelManagementDbContext context) : IRoomRepository
             .Take(pageSize)
             .ToListAsync(cancellationToken);
     }
-    
+
     public Task<List<Room>> GetAvailableAsync(
         long hotelId,
         DateOnly checkInDate,
@@ -194,7 +195,7 @@ public class RoomRepository(HotelManagementDbContext context) : IRoomRepository
 
         await transaction.CommitAsync(cancellationToken);
     }
-    
+
     public async Task<Room> UpdateOperationalStatusAsync(
         long roomId,
         string operationalStatus,

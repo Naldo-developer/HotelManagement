@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using HotelManagement.Application.Dtos.Stays;
-using HotelManagement.Application.Exceptions;
+using HotelManagement.Domain.Exceptions;
 using HotelManagement.Domain.Repositories;
 using MediatR;
 

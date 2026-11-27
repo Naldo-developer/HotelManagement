@@ -1,6 +1,8 @@
-﻿using System.Data;
+﻿using HotelManagement.Domain.Rules;
+using System.Data;
 using HotelManagement.Application.Exceptions;
 using HotelManagement.Domain.Entities;
+using HotelManagement.Domain.Exceptions;
 using HotelManagement.Domain.Repositories;
 using HotelManagement.Infrastructure.Configuration;
 using HotelManagement.Infrastructure.Persistence;
@@ -42,11 +44,7 @@ public class ReservationRepository(HotelManagementDbContext context)
                 "La habitación indicada no existe.");
         }
 
-        if (room.OperationalStatus != "ACTIVE")
-        {
-            throw new BusinessConflictException(
-                "La habitación no se encuentra operativa.");
-        }
+        ReservationRules.EnsureOperationalRoom(room.OperationalStatus);
 
         var guestExists = await context.Guests.AnyAsync(
             guest => guest.GuestId == reservation.PrimaryGuestId,
@@ -58,12 +56,7 @@ public class ReservationRepository(HotelManagementDbContext context)
                 "El huésped indicado no existe.");
         }
 
-        if (reservation.CheckInDate == default ||
-            reservation.CheckOutDate <= reservation.CheckInDate)
-        {
-            throw new BusinessValidationException(
-                "La fecha de salida debe ser posterior a la fecha de entrada.");
-        }
+        ReservationRules.EnsureValidPeriod(reservation.CheckInDate, reservation.CheckOutDate);
 
         var roomType = await context.RoomTypes
             .AsNoTracking()
@@ -71,19 +64,8 @@ public class ReservationRepository(HotelManagementDbContext context)
                 type => type.RoomTypeId == room.RoomTypeId,
                 cancellationToken);
 
-        if (reservation.Adults < 1 ||
-            reservation.Adults > roomType.MaxAdults)
-        {
-            throw new BusinessValidationException(
-                "La cantidad de adultos debe estar entre uno y la capacidad de la habitación.");
-        }
-
-        if (reservation.Children < 0 ||
-            reservation.Children > roomType.MaxChildren)
-        {
-            throw new BusinessValidationException(
-                "La cantidad de niños supera el rango permitido para la habitación.");
-        }
+        ReservationRules.EnsureCapacity(reservation.Adults, reservation.Children,
+            roomType.MaxAdults, roomType.MaxChildren);
 
         var hasReservation = await context.Reservations.AnyAsync(
             existing =>
@@ -104,11 +86,7 @@ public class ReservationRepository(HotelManagementDbContext context)
                 maintenance.EndDate > reservation.CheckInDate,
             cancellationToken);
 
-        if (hasReservation || hasMaintenance)
-        {
-            throw new BusinessConflictException(
-                "La habitación no está disponible para las fechas indicadas.");
-        }
+        ReservationRules.EnsureAvailable(hasReservation, hasMaintenance);
 
         reservation.NightlyRate = roomType.BaseRate;
         reservation.Status = "PENDING";

@@ -2,6 +2,7 @@
 using HotelManagement.Application.Dtos.Users;
 using HotelManagement.Application.Exceptions;
 using HotelManagement.Application.Security;
+using HotelManagement.Domain.Exceptions;
 using HotelManagement.Domain.Repositories;
 using MediatR;
 

@@ -1,5 +1,5 @@
 ﻿using HotelManagement.Application.Dtos.Employees;
-using HotelManagement.Application.Exceptions;
+using HotelManagement.Domain.Exceptions;
 using HotelManagement.Domain.Repositories;
 using MediatR;
 

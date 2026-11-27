@@ -1,7 +1,7 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using HotelManagement.Application.Dtos.Auth;
-using HotelManagement.Application.Exceptions;
 using HotelManagement.Application.Security;
+using HotelManagement.Domain.Exceptions;
 using HotelManagement.Domain.Repositories;
 using MediatR;
 
