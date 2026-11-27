@@ -6,6 +6,11 @@ Application, Domain e Infrastructure; CQRS con MediatR.
 Autenticación actual: **JWT Bearer**, con tokens de acceso de 15 minutos.
 [Configuración y uso de JWT](docs/autenticacion-jwt.md).
 
+Los comandos de negocio utilizan Unit of Work para confirmar o revertir sus
+escrituras. El flujo `POST /api/reservations/with-guest` registra huésped y
+reserva atómicamente. Las políticas principales de reservas y estadías están
+en Domain. Ver [implementación, pruebas y guía de exposición](docs/unidad-de-trabajo.md).
+
 La [guía de arquitectura](docs/arquitectura.md) describe las carpetas, dependencias
 y convenciones actuales. El workflow `.github/workflows/ci.yml` prepara la
 compilación Release, pruebas con PostgreSQL 18 y artefactos de publicación en
@@ -63,6 +68,9 @@ dotnet test HotelManagement.sln --nologo -- xUnit.ParallelizeTestCollections=fal
 Resultado real: **45 aprobadas, 0 fallidas, 0 omitidas**. Compilación correcta.
 La migración JWT se verificó después con **74 pruebas .NET y 3 pruebas del
 cliente JavaScript aprobadas**, incluidas las integraciones con PostgreSQL.
+La incorporación de Unit of Work se verificó con **95 pruebas .NET y 3
+JavaScript aprobadas**, sin fallos ni pruebas omitidas, incluyendo rollback
+entre repositorios, cancelación y el endpoint compuesto con JWT.
 Verificación posterior de la integración con T08, Aurora y R06: **50 aprobadas,
 0 fallidas, 0 omitidas**, con PostgreSQL 18 temporal en loopback. Detalles y
 alcance del commit consolidado en [integración de entrega](docs/integracion-entrega.md).

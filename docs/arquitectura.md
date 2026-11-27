@@ -22,10 +22,13 @@ HotelManagement/
 │   │   ├── Dtos/                Contratos agrupados por funcionalidad
 │   │   ├── Exceptions/          Errores de aplicación
 │   │   ├── Security/            Contrato del servicio de hashing
+│   │   ├── Transactions/        Puerto Unit of Work y behavior transaccional
 │   │   └── UseCases/            Commands, Queries y mapeos por funcionalidad
 │   ├── HotelManagement.Domain/
 │   │   ├── Entities/            Entidades sin dependencias de persistencia
-│   │   └── Repositories/        Contratos de acceso a datos por entidad
+│   │   ├── Repositories/        Contratos de acceso a datos por entidad
+│   │   ├── Exceptions/          Conflictos y validaciones de negocio
+│   │   └── Rules/               Políticas de reservas y estadías
 │   └── HotelManagement.Infrastructure/
 │       ├── Configuration/       AddInfrastructure y registro de dependencias
 │       ├── Persistence/         HotelManagementDbContext y modelo de EF Core
@@ -55,9 +58,18 @@ Infrastructure implementa los contratos de repositorio y seguridad.
 La API compone los registros AddApplication, AddInfrastructure y sus servicios
 HTTP. Las pruebas acceden a la aplicación mediante la API y sus dependencias.
 
-Las reglas de reservas, estadías y caja actualmente se reparten entre handlers,
-repositorios y restricciones SQL. Trasladar reglas a otra capa es un cambio
-funcional que requiere conservar transacciones y garantías de concurrencia.
+Las políticas principales de reservas y estadías están en Domain.Rules. Los
+handlers coordinan casos de uso; Infrastructure lee datos bajo bloqueo, invoca
+esas políticas y persiste los resultados. Las restricciones SQL se conservan
+como defensa de integridad y concurrencia. Otros módulos aún contienen reglas
+en handlers y repositorios.
+
+Application define IUnitOfWork y TransactionBehavior. Infrastructure implementa
+ese puerto mediante EfUnitOfWork y un DbContext scoped compartido. Los comandos
+de negocio marcados como ITransactionalRequest confirman todos sus cambios al
+finalizar o los revierten ante error/cancelación. El caso compuesto huésped +
+reserva demuestra la coordinación entre repositorios. Ver
+[unidad de trabajo, reglas y guía de exposición](unidad-de-trabajo.md).
 
 ## Convenciones
 
@@ -70,7 +82,7 @@ funcional que requiere conservar transacciones y garantías de concurrencia.
   HttpContext.RequestAborted; el acceso a EF Core corresponde a Infrastructure.
 - Los repositorios son específicos por entidad. Sus operaciones asíncronas
   reciben CancellationToken cuando corresponde.
-- Las excepciones de aplicación se traducen centralmente a ProblemDetails.
+- Las excepciones de dominio y aplicación se traducen centralmente a ProblemDetails.
 - Los servicios se registran mediante las extensiones de cada capa. No crear
   archivos DependencyInjection duplicados de registros ya existentes.
 - Los archivos de pruebas pertenecen al proyecto de tests, fuera de src.
