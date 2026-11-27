@@ -2,7 +2,7 @@ using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Security.Cryptography;
-using HotelManagement.Api.Security;
+using HotelManagement.Infrastructure.Services;
 using HotelManagement.Application.Dtos.Auth;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;

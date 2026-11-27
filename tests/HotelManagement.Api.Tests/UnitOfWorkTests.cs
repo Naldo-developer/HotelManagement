@@ -1,12 +1,12 @@
-using HotelManagement.Application.Configuration;
+using HotelManagement.Application;
 using HotelManagement.Application.Dtos.Guests;
 using HotelManagement.Application.Dtos.Reservations;
 using HotelManagement.Application.Transactions;
 using HotelManagement.Application.UseCases.Guests.Commands;
 using HotelManagement.Application.UseCases.Reservations.Commands;
 using HotelManagement.Domain.Exceptions;
-using HotelManagement.Infrastructure.Configuration;
-using HotelManagement.Infrastructure.Persistence;
+using HotelManagement.Infrastructure;
+using HotelManagement.Infrastructure.Data;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;

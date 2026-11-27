@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { api } from '../../src/HotelManagement.Api/wwwroot/js/api.js';
-import { clearAccessToken, getAccessToken, setAccessToken } from '../../src/HotelManagement.Api/wwwroot/js/auth-token.js';
+import { api } from '../../HotelManagement.Api/wwwroot/js/api.js';
+import { clearAccessToken, getAccessToken, setAccessToken } from '../../HotelManagement.Api/wwwroot/js/auth-token.js';
 
 test('El cliente usa Bearer y omite cookies, sin enviar un token previo al login', async () => {
     const requests = [];

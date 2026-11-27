@@ -1,13 +1,14 @@
+using HotelManagement.Infrastructure.Data.Seeders;
 using HotelManagement.Application.Dtos.Reservations;
 using HotelManagement.Application.Dtos.Stays;
 using System.Net;
 using System.Net.Http.Json;
-using HotelManagement.Infrastructure.Security;
+using HotelManagement.Infrastructure.Services;
 using HotelManagement.Api.Configuration;
 using HotelManagement.Api.Controllers;
-using HotelManagement.Application.Configuration;
+using HotelManagement.Application;
 using HotelManagement.Application.Dtos.Rooms;
-using HotelManagement.Infrastructure.Configuration;
+using HotelManagement.Infrastructure;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.TestHost;
@@ -16,7 +17,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Npgsql;
 using HotelManagement.Application.Dtos.Guests;
-using HotelManagement.Infrastructure.Persistence;
+using HotelManagement.Infrastructure.Data;
 using Microsoft.AspNetCore.Http;
 
 namespace HotelManagement.Api.Tests;

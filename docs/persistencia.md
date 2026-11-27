@@ -48,8 +48,8 @@ utilizando el proveedor `Npgsql.EntityFrameworkCore.PostgreSQL` y estas opciones
 desde la raíz:
 
 ```text
---project src/HotelManagement.Infrastructure
---startup-project src/HotelManagement.Api
+--project HotelManagement.Infrastructure
+--startup-project HotelManagement.Api
 ```
 
 Esta preparación no ejecuta scaffolding, scripts SQL ni cambios en la base de datos,

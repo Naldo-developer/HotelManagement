@@ -18,7 +18,7 @@ try {
     if (-not $env:ConnectionStrings__DefaultConnection -or -not $env:Jwt__SigningKey) {
         # Production no lee User Secrets. Este lanzador local pasa solo la conexión
         # existente y la clave JWT por entorno, sin copiar secretos al publish.
-        $project = Join-Path (Split-Path -Parent $PSScriptRoot) 'src/HotelManagement.Api/HotelManagement.Api.csproj'
+        $project = Join-Path (Split-Path -Parent $PSScriptRoot) 'HotelManagement.Api/HotelManagement.Api.csproj'
         $projectXml = [xml](Get-Content -LiteralPath $project -Raw)
         $secretId = $projectXml.Project.PropertyGroup.UserSecretsId | Where-Object { $_ } | Select-Object -First 1
         $secretPath = Join-Path $env:APPDATA "Microsoft/UserSecrets/$secretId/secrets.json"
